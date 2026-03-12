@@ -222,7 +222,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 300))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['C1']
+    text = AscensionMod.StartingOptions['C1']..AscensionMod.StartingOptions['C2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedStartingOption == 'C' then
@@ -238,7 +238,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 320))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['D1']
+    text = AscensionMod.StartingOptions['D1']..AscensionMod.StartingOptions['D2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedStartingOption == 'D' then
@@ -314,10 +314,33 @@ local startingOptionAB = {
     end,
 }
 local startingOptionCDAdvantage = {
+    ['获得 25 随机硬币'] = function()
+        local p0 = game:GetPlayer(0)
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, 1, 25, true)
+    end,
+    ['获得 20 随机炸弹'] = function()
+        local p0 = game:GetPlayer(0)
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, 1, 20, true)
+    end,
 
 }
 local startingOptionCDDisadvantage = {
-
+    ['失去 1 点幸运'] = function()
+        local p0 = game:GetPlayer(0)
+        p0.Luck = p0.Luck - 1
+    end,
+    ['受到 半颗心 伤害'] = function()
+        local p0 = game:GetPlayer(0)
+        p0:AddHearts(-1)
+    end,
 }
 
 
@@ -367,6 +390,46 @@ function AscensionMod:GetStartingOptions()
         end
         if j == optionB and AscensionMod.StartingOptions.B == ''  then
             AscensionMod.StartingOptions.B = desc
+        end
+    end
+
+    local optionCDAdvantageSize = 0
+    for _, _ in pairs(startingOptionCDAdvantage) do
+        optionCDAdvantageSize = optionCDAdvantageSize + 1
+    end
+    local optionC1 = math.random(optionCDAdvantageSize)
+    local optionD1 = math.random(optionCDAdvantageSize - 1)
+    i = 0
+    j = 0
+    for desc, _ in pairs(startingOptionCDAdvantage) do
+        i = i + 1
+        j = j + 1
+        if i == optionC1 and AscensionMod.StartingOptions['C1'] == '' then
+            AscensionMod.StartingOptions['C1'] = desc
+            j = j - 1
+        end
+        if j == optionD1 and AscensionMod.StartingOptions['D1'] == ''  then
+            AscensionMod.StartingOptions['D1'] = desc
+        end
+    end
+
+    local optionCDDisadvantageSize = 0
+    for _, _ in pairs(startingOptionCDDisadvantage) do
+        optionCDDisadvantageSize = optionCDDisadvantageSize + 1
+    end
+    local optionC2 = math.random(optionCDDisadvantageSize)
+    local optionD2 = math.random(optionCDDisadvantageSize - 1)
+    i = 0
+    j = 0
+    for desc, _ in pairs(startingOptionCDDisadvantage) do
+        i = i + 1
+        j = j + 1
+        if i == optionC2 and AscensionMod.StartingOptions['C2'] == '' then
+            AscensionMod.StartingOptions['C2'] = desc
+            j = j - 1
+        end
+        if j == optionD2 and AscensionMod.StartingOptions['D2'] == ''  then
+            AscensionMod.StartingOptions['D2'] = desc
         end
     end
 end
