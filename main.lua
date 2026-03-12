@@ -98,7 +98,7 @@ AscensionMod:LoadFont()
 
 AscensionMod.TextColor = {
     ['white'] = KColor(1, 1, 1, 1),
-    ['gray'] = KColor(.5, .5, .5, 1)
+    ['gray'] = KColor(.5, .5, .5, 1),
 }
 
 local game = Game()
@@ -112,6 +112,15 @@ function AscensionMod:Start(isContinued)
     if isContinued and AscensionMod.ConfirmedStartingOption then
         return
     end
+    scheduler:clear()
+
+    AscensionMod.playerStats = {
+        rangeAdd = 0,
+        rangeMul = 1,
+    }
+    local p0 = game:GetPlayer(0)
+    p0:AddCacheFlags(CacheFlag.CACHE_ALL, true)
+
     AscensionMod:SpawnStartingAngelStatue()
 
     AscensionMod:DisablePlayerControls()
@@ -119,6 +128,7 @@ function AscensionMod:Start(isContinued)
 
     AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
 
+    AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
     AscensionMod:GetStartingOptions()
     AscensionMod.SelectedStartingOption = 'A'
     AscensionMod.ConfirmedStartingOption = false
@@ -222,7 +232,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 300))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['C1']..AscensionMod.StartingOptions['C2']
+    text = AscensionMod.StartingOptions['C1']..' 但是 '..AscensionMod.StartingOptions['C2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedStartingOption == 'C' then
@@ -238,7 +248,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 320))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['D1']..AscensionMod.StartingOptions['D2']
+    text = AscensionMod.StartingOptions['D1']..' 但是 '..AscensionMod.StartingOptions['D2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedStartingOption == 'D' then
@@ -294,13 +304,43 @@ function AscensionMod:SwitchSeletedStartingOption(entity, _, _)
 end
 AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedStartingOption)
 
-
 local startingOptionAB = {
-    ['获得 20 硬币'] = function()
+    ['获得 15 便士'] = function()
         local p0 = game:GetPlayer(0)
         scheduler:seq_n(function ()
             Isaac.Spawn(
             EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, 1, 15, true)
+    end,
+    ['获得 5 随机炸弹'] = function()
+        local p0 = game:GetPlayer(0)
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, 1, 5, true)
+    end,
+    ['获得 2 钥匙圈'] = function()
+        local p0 = game:GetPlayer(0)
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, 1, 2, true)
+    end,
+    ['获得 2 点射程'] = function()
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 2
+        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+    end,
+}
+local startingOptionCDAdvantage = {
+    ['获得 20 随机硬币'] = function()
+        local p0 = game:GetPlayer(0)
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
         end, 1, 20, true)
     end,
@@ -312,34 +352,39 @@ local startingOptionAB = {
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
         end, 1, 10, true)
     end,
-}
-local startingOptionCDAdvantage = {
-    ['获得 25 随机硬币'] = function()
+    ['获得 5 随机钥匙'] = function()
         local p0 = game:GetPlayer(0)
         scheduler:seq_n(function ()
             Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 25, true)
+        end, 1, 5, true)
     end,
-    ['获得 20 随机炸弹'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 20, true)
-    end,
-
 }
 local startingOptionCDDisadvantage = {
-    ['失去 1 点幸运'] = function()
+    ['失去 2 点幸运'] = function()
         local p0 = game:GetPlayer(0)
-        p0.Luck = p0.Luck - 1
+        p0:DonateLuck(-2)
     end,
-    ['受到 半颗心 伤害'] = function()
+    ['失去 一颗心 最大生命'] = function()
         local p0 = game:GetPlayer(0)
-        p0:AddHearts(-1)
+        p0:AddMaxHearts(-2, false)
+    end,
+    ['获得 一颗碎心'] = function()
+        local p0 = game:GetPlayer(0)
+        p0:AddBrokenHearts(1)
+    end,
+    ['元素反应'] = function()
+        local p0 = game:GetPlayer(0)
+        p0:UsePoopSpell(PoopSpellType.SPELL_BURNING)
+        scheduler:once(function ()
+            p0:UsePoopSpell(PoopSpellType.SPELL_FART)
+        end, 1)
+    end,
+    ['射程倍率 变为 35%'] = function()
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.35
+        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
     end,
 }
 
@@ -348,6 +393,9 @@ function AscensionMod:ConfirmSeletedStartingOption()
     if AscensionMod.ConfirmedStartingOption then
         return
     end
+
+    game:GetPlayer(0):AnimateHappy()
+
     AscensionMod.ConfirmedStartingOption = true
     local option = AscensionMod.SelectedStartingOption;
     if option == 'A' or option == 'B' then
@@ -433,6 +481,21 @@ function AscensionMod:GetStartingOptions()
         end
     end
 end
+
+
+---@param player EntityPlayer
+---@param cacheFlag CacheFlag
+function AscensionMod:OnEvaluateCache(player, cacheFlag)
+    local stats = AscensionMod.playerStats;
+    if stats == nil then
+        return
+    end
+    if cacheFlag == CacheFlag.CACHE_RANGE then
+        print(player.TearRange, stats.rangeAdd, stats.rangeMul)
+        player.TearRange = (player.TearRange + stats.rangeAdd * 40) * stats.rangeMul;
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, AscensionMod.OnEvaluateCache)
 
 
 function AscensionMod:End(isLose)
