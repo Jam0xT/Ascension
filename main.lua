@@ -104,7 +104,7 @@ AscensionMod.TextColor = {
 local game = Game()
 
 local ascensionDesc = {
-    ['0'] = '对原版的平衡性调整',
+    ['0'] = '',
 }
 
 
@@ -130,6 +130,7 @@ function AscensionMod:Start(isContinued)
 
     AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
     AscensionMod:GetStartingOptions()
+    AscensionMod:GetStartingDialogue()
     AscensionMod.SelectedStartingOption = 'A'
     AscensionMod.ConfirmedStartingOption = false
 end
@@ -151,6 +152,30 @@ AscensionMod.PrevStartingOption = {
     ['D'] = 'C',
 }
 AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
+AscensionMod.StartingDialogueList = {
+    "至少……也要见到……第一坨大便吧……",
+    "你好……",
+    "我把你……带回来了……"
+}
+AscensionMod.StartingDialogue = ''
+AscensionMod.FoundPoopLastRun = false
+function AscensionMod:GetStartingDialogue()
+    local legitDialogueList = {}
+    local length = 0
+    for _, dialogue in ipairs(AscensionMod.StartingDialogueList) do
+        if dialogue == "至少……也要见到……第一坨大便吧……" then
+            if not AscensionMod.FoundPoopLastRun then
+                table.insert(legitDialogueList, dialogue)
+                length = length + 1
+            end
+        else
+            table.insert(legitDialogueList, dialogue)
+            length = length + 1
+        end
+    end
+    AscensionMod.StartingDialogue = legitDialogueList[math.random(length)]
+    AscensionMod.FoundPoopLastRun = false
+end
 function AscensionMod:RenderStartingOptions()
     if AscensionMod.ConfirmedStartingOption then
         return
@@ -164,7 +189,7 @@ function AscensionMod:RenderStartingOptions()
     local pos = Isaac.WorldToScreen(Vector(320, 220))
     local x = pos.X
     local y = pos.Y
-    local text = "至少……也要见到……第一坨大便吧……"
+    local text = AscensionMod.StartingDialogue
     local length = font:GetStringWidth(text)
     local scale = 1.7
     local color = AscensionMod.TextColor['white']
@@ -491,7 +516,6 @@ function AscensionMod:OnEvaluateCache(player, cacheFlag)
         return
     end
     if cacheFlag == CacheFlag.CACHE_RANGE then
-        print(player.TearRange, stats.rangeAdd, stats.rangeMul)
         player.TearRange = (player.TearRange + stats.rangeAdd * 40) * stats.rangeMul;
     end
 end
@@ -565,3 +589,22 @@ function AscensionMod:EnablePlayerControls()
         player.ControlsCooldown = 0
     end
 end
+
+function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
+    if AscensionMod.FoundPoopLastRun then
+        return
+    end
+    if entityType >= 1000 then -- 1000+ is grid entity because of reasons
+        local room = game:GetRoom()
+        scheduler:once(function()
+            local gridEntity = room:GetGridEntityFromPos(room:GetGridPosition(gridIndex))
+            if gridEntity ~= nil then
+                if gridEntity:GetType() == GridEntityType.GRID_POOP then
+                    AscensionMod.FoundPoopLastRun = true
+                    print('poop')
+                end
+            end
+        end, 1)
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.LookForPoop)
