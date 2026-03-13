@@ -215,7 +215,7 @@ AscensionMod.NPCDialogues = {
 }
 
 AscensionMod.NPCStatues = {
-    ['angle'] = { -- [1] for spawn, [2] for remove
+    ['angel'] = { -- [1] for spawn, [2] for remove
         function ()
             AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
         end,
@@ -430,7 +430,7 @@ function AscensionMod:StartNewStage()
 
     AscensionMod.dialogue = AscensionMod:GetDialogue(AscensionMod.NPCID)
 
-    AscensionMod.Options = {} -- A, B, C1-C2, D1-D2
+    AscensionMod.options = {} -- A, B, C1-C2, D1-D2
     AscensionMod:SetOptions(AscensionMod.NPCID)
 
     AscensionMod.isOptionConfirmed = false
@@ -493,7 +493,6 @@ end
 
 
 function AscensionMod:SpawnStatue(NPCID)
-    print(NPCID, AscensionMod.NPCStatues[NPCID])
     AscensionMod.NPCStatues[NPCID][1]()
 end
 
@@ -507,6 +506,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+AscensionMod.options = {}
 ---@param NPCID string The ID of the NPC you wish to choose options from
 function AscensionMod:SetOptions(NPCID)
     if NPCID == nil then print('Error: NPC ID is nil while trying to set options.') return end
@@ -525,8 +525,8 @@ function AscensionMod:SetOptions(NPCID)
     local i = 0
     for desc, _ in pairs(optionsAB) do
         i = i + 1
-        if i == optionA then AscensionMod.Options['A'] = desc end
-        if i == optionB then AscensionMod.Options['B'] = desc end
+        if i == optionA then AscensionMod.options['A'] = desc end
+        if i == optionB then AscensionMod.options['B'] = desc end
     end
 
     local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
@@ -543,8 +543,8 @@ function AscensionMod:SetOptions(NPCID)
     i = 0
     for desc, _ in pairs(optionsCD1) do
         i = i + 1
-        if i == optionC1 then AscensionMod.Options['C1'] = desc end
-        if i == optionD1 then AscensionMod.Options['D1'] = desc end
+        if i == optionC1 then AscensionMod.options['C1'] = desc end
+        if i == optionD1 then AscensionMod.options['D1'] = desc end
     end
 
     local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
@@ -561,8 +561,8 @@ function AscensionMod:SetOptions(NPCID)
     i = 0
     for desc, _ in pairs(optionsCD2) do
         i = i + 1
-        if i == optionC2 then AscensionMod.Options['C2'] = desc end
-        if i == optionD2 then AscensionMod.Options['D2'] = desc end
+        if i == optionC2 then AscensionMod.options['C2'] = desc end
+        if i == optionD2 then AscensionMod.options['D2'] = desc end
     end
 end
 
@@ -615,7 +615,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 260))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.Options['A']
+    text = tostring(AscensionMod.options['A'])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'A' then
@@ -631,7 +631,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 280))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.Options['B']
+    text = tostring(AscensionMod.options['B'])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'B' then
@@ -647,7 +647,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 300))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.Options['C1']..' 但是 '..AscensionMod.Options['C2']
+    text = tostring(AscensionMod.options['C1'])..' 但是 '..tostring(AscensionMod.options['C2'])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'C' then
@@ -663,7 +663,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 320))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.Options['D1']..' 但是 '..AscensionMod.Options['D2']
+    text = tostring(AscensionMod.options['D1'])..' 但是 '..tostring(AscensionMod.options['D2'])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'D' then
@@ -743,21 +743,21 @@ function AscensionMod:ConfirmSeletedOption()
     local key
     local eventFn
     if option == 'A' or option == 'B' then
-        key = AscensionMod.Options[option]
+        key = AscensionMod.options[option]
         eventFn = optionsAB[key]
         if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
     else
-        key = AscensionMod.Options[tostring(option)..'1']
+        key = AscensionMod.options[tostring(option)..'1']
         eventFn = optionsCD1[key]
         if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
 
-        key = AscensionMod.Options[tostring(option)..'2']
+        key = AscensionMod.options[tostring(option)..'2']
         eventFn = optionsCD2[key]
         if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
     end
 
     AscensionMod:ShowPlayer()
-    AscensionMod:RemoveStatue()
+    AscensionMod:RemoveStatue(NPCID)
 
     scheduler:once(function ()
         AscensionMod:EnablePlayerControls()
