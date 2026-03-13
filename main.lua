@@ -859,7 +859,7 @@ function AscensionMod:FirstStage()
     -- aka. basement 1 / cellar 1 / burning basement 1
     local level = game:GetLevel()
     local stage = level:GetStage()
-    if stage == 1 and (not level:IsAltStage()) then
+    if stage == 1 and (level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE) and (level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE_B) then
         return true
     end
     return false
