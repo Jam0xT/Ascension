@@ -214,6 +214,25 @@ AscensionMod.NPCDialogues = {
     }
 }
 
+AscensionMod.NPCStatues = {
+    ['angle'] = { -- [1] for spawn, [2] for remove
+        function ()
+            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
+        end,
+        function()
+            AscensionMod.NPCStatue:Remove()
+        end,
+    },
+    ['devil'] = {
+        function ()
+            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.DEVIL, 0, Vector(320, 200), Vector.Zero, nil)
+        end,
+        function()
+            AscensionMod.NPCStatue:Remove()
+        end
+    }
+}
+
 AscensionMod.NPCOptions = {
     ['angel'] = {
         ['AB'] = {
@@ -329,10 +348,10 @@ function AscensionMod:StartNewStage()
     AscensionMod.Options = {} -- A, B, C1-C2, D1-D2
     AscensionMod:SetOptions(AscensionMod.NPCID)
 
-    AscensionMod.ConfirmedOption = false
+    AscensionMod.isOptionConfirmed = false
     AscensionMod.SelectedOption = 'A'
 
-    AscensionMod:SpawnAngelStatue()
+    AscensionMod:SpawnStatue(AscensionMod.NPCID)
 
     AscensionMod:DisablePlayerControls()
     AscensionMod:HidePlayer()
@@ -388,17 +407,12 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-function AscensionMod:SpawnAngelStatue()
-    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
+function AscensionMod:SpawnStatue(NPCID)
+    AscensionMod.NPCStatues[NPCID][1]()
 end
 
-function AscensionMod:RemoveAngelStatue()
-    local entities = Isaac.GetRoomEntities()
-    for _, entity in ipairs(entities) do
-        if entity.Type == EntityType.ENTITY_EFFECT and entity.Variant == EffectVariant.ANGEL then
-            entity:Remove()
-        end
-    end
+function AscensionMod:RemoveStatue(NPCID)
+    AscensionMod.NPCStatues[NPCID][2]()
 end
 
 
@@ -467,7 +481,7 @@ function AscensionMod:SetOptions(NPCID)
 end
 
 function AscensionMod:RenderStartingOptions()
-    if AscensionMod.ConfirmedOption then
+    if AscensionMod.isOptionConfirmed then
         return
     end
 
@@ -589,7 +603,7 @@ local actionUpReleased = true
 local actionConfirmReleased = true
 ---@param entity Entity
 function AscensionMod:SwitchSeletedOption(entity, _, _)
-    if AscensionMod.ConfirmedOption then
+    if AscensionMod.isOptionConfirmed then
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
@@ -616,7 +630,7 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
     if Input.IsActionPressed(ButtonAction.ACTION_MENUCONFIRM, 0) then
         if actionConfirmReleased then
             actionConfirmReleased = false
-            AscensionMod:ConfirmSeletedStartingOption()
+            AscensionMod:ConfirmSeletedOption()
         end
     else
         actionConfirmReleased = true
@@ -624,8 +638,8 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
 end
 AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedOption)
 
-function AscensionMod:ConfirmSeletedStartingOption()
-    if AscensionMod.ConfirmedOption then
+function AscensionMod:ConfirmSeletedOption()
+    if AscensionMod.isOptionConfirmed then
         return
     end
 
@@ -633,30 +647,35 @@ function AscensionMod:ConfirmSeletedStartingOption()
         game:GetPlayer(i):AnimateHappy()
     end
 
-    AscensionMod.ConfirmedOption = true
+    AscensionMod.isOptionConfirmed = true
     local option = AscensionMod.SelectedOption;
+
+    local NPCID = AscensionMod.NPCID
+    local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
+    local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
+    local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
+    local key
+    local eventFn
     if option == 'A' or option == 'B' then
-        local eventFn = startingOptionAB[AscensionMod.Options[option]]
-        if eventFn ~= nil then
-            eventFn()
-        end
-    else -- C or D
-        local eventFn = startingOptionCDAdvantage[AscensionMod.Options[tostring(option)..'1']]
-        if eventFn ~= nil then
-            eventFn()
-        end
-        eventFn = startingOptionCDDisadvantage[AscensionMod.Options[tostring(option)..'2']]
-        if eventFn ~= nil then
-            eventFn()
-        end
+        key = AscensionMod.Options[option]
+        eventFn = optionsAB[key]
+        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+    else
+        key = AscensionMod.Options[tostring(option)..'1']
+        eventFn = optionsCD1[key]
+        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+
+        key = AscensionMod.Options[tostring(option)..'2']
+        eventFn = optionsCD2[key]
+        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
     end
 
     AscensionMod:ShowPlayer()
-    AscensionMod:RemoveAngelStatue()
+    AscensionMod:RemoveStatue()
 
     scheduler:once(function ()
         AscensionMod:EnablePlayerControls()
-    end, 1)
+    end, 1) -- 延迟 1 帧防止按空格选择时同时触发主动
 end
 
 
