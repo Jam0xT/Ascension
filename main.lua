@@ -107,6 +107,10 @@ local ascensionDesc = {
     ['0'] = '',
 }
 
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------- 开局选项（天使） -------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+
 
 function AscensionMod:Start(isContinued)
     if isContinued and AscensionMod.ConfirmedStartingOption then
@@ -118,6 +122,7 @@ function AscensionMod:Start(isContinued)
         rangeAdd = 0,
         rangeMul = 1,
     }
+
     local p0 = game:GetPlayer(0)
     p0:AddCacheFlags(CacheFlag.CACHE_ALL, true)
 
@@ -330,13 +335,13 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedStartingOption)
 
 local startingOptionAB = {
-    ['获得 15 便士'] = function()
+    ['获得 10 便士'] = function()
         local p0 = game:GetPlayer(0)
         scheduler:seq_n(function ()
             Isaac.Spawn(
             EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 15, true)
+        end, 1, 10, true)
     end,
     ['获得 5 随机炸弹'] = function()
         local p0 = game:GetPlayer(0)
@@ -440,8 +445,11 @@ function AscensionMod:ConfirmSeletedStartingOption()
     end
 
     AscensionMod:ShowPlayer()
-    AscensionMod:EnablePlayerControls()
     AscensionMod:RemoveStartingAngelStatue()
+
+    scheduler:once(function ()
+        AscensionMod:EnablePlayerControls()
+    end, 1)
 end
 
 
@@ -601,7 +609,7 @@ function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
             if gridEntity ~= nil then
                 if gridEntity:GetType() == GridEntityType.GRID_POOP then
                     AscensionMod.FoundPoopLastRun = true
-                    print('poop')
+                    -- print('poop')
                 end
             end
         end, 1)
