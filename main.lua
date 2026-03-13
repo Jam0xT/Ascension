@@ -10,8 +10,7 @@ local game = Game()
 local SHIFT_INDEX = 35
 local seeds = game:GetSeeds()
 local startSeed = seeds:GetStartSeed()
-local rng = RNG()
-rng:SetSeed(startSeed, SHIFT_INDEX)
+local rng = RNG(startSeed, SHIFT_INDEX)
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +133,7 @@ AscensionMod.TextColor = {
 
 
 AscensionMod.ascensions = {
-    ['0'] = '',
+    ['0'] = '深渊 - BOSS 血量增长 25%；每下一层，所有敌人血量增长6%',
     ['1'] = '',
     ['2'] = '',
     ['3'] = '',
