@@ -428,7 +428,7 @@ function AscensionMod:StartNewStage()
 
     AscensionMod.NPCID = AscensionMod:GetNPC()
 
-    AscensionMod.Dialogue = AscensionMod:GetDialogue(AscensionMod.NPCID)
+    AscensionMod.dialogue = AscensionMod:GetDialogue(AscensionMod.NPCID)
 
     AscensionMod.Options = {} -- A, B, C1-C2, D1-D2
     AscensionMod:SetOptions(AscensionMod.NPCID)
@@ -578,7 +578,7 @@ function AscensionMod:RenderStartingOptions()
     local pos = Isaac.WorldToScreen(Vector(320, 220))
     local x = pos.X
     local y = pos.Y
-    local text = AscensionMod.StartingDialogue
+    local text = AscensionMod.dialogue
     local length = font:GetStringWidth(text)
     local scale = 1.7
     local color = AscensionMod.TextColor['white']
