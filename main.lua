@@ -629,7 +629,9 @@ function AscensionMod:ConfirmSeletedStartingOption()
         return
     end
 
-    game:GetPlayer(0):AnimateHappy()
+    for i = 0, game:GetNumPlayers() - 1 do
+        game:GetPlayer(i):AnimateHappy()
+    end
 
     AscensionMod.ConfirmedOption = true
     local option = AscensionMod.SelectedOption;
