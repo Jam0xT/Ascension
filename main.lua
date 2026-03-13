@@ -7,6 +7,12 @@ AscensionMod.SaveManager.Init(AscensionMod)
 
 local game = Game()
 
+local SHIFT_INDEX = 35
+local seeds = game:GetSeeds()
+local startSeed = seeds:GetStartSeed()
+local rng = RNG()
+rng:SetSeed(startSeed, SHIFT_INDEX)
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------- 延时触发辅助工具 ---------------------------------------------------------------------
@@ -452,7 +458,7 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewSt
 ---@return string NPCID id of the chosen npc
 function AscensionMod:GetNPC()
     local legitNPCIDList = AscensionMod:GetLegitNPCs()
-    return legitNPCIDList[math.random(#legitNPCIDList)]
+    return legitNPCIDList[rng:RandomInt(#legitNPCIDList - 1) + 1]
 end
 
 function AscensionMod:GetLegitNPCs()
@@ -483,7 +489,7 @@ function AscensionMod:GetDialogue(NPCID)
 
     AscensionMod.FoundPoopLastRun = false
 
-    return legitDialogueList[math.random(#legitDialogueList)]
+    return legitDialogueList[rng:RandomInt(#legitDialogueList - 1) + 1]
 end
 
 
@@ -517,8 +523,8 @@ function AscensionMod:SetOptions(NPCID)
         return
     end
     local optionsABCnt = AscensionMod:GetTableSize(optionsAB)
-    local optionA = math.random(optionsABCnt)
-    local optionB = math.random(optionsABCnt - 1)
+    local optionA = rng:RandomInt(optionsABCnt - 1) + 1
+    local optionB = rng:RandomInt(optionsABCnt - 1 - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
@@ -535,8 +541,8 @@ function AscensionMod:SetOptions(NPCID)
         return
     end
     local optionsCD1Cnt = AscensionMod:GetTableSize(optionsCD1)
-    local optionC1 = math.random(optionsCD1Cnt)
-    local optionD1 = math.random(optionsCD1Cnt - 1)
+    local optionC1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
+    local optionD1 = rng:RandomInt(optionsCD1Cnt - 1 - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
@@ -553,8 +559,8 @@ function AscensionMod:SetOptions(NPCID)
         return
     end
     local optionsCD2Cnt = AscensionMod:GetTableSize(optionsCD2)
-    local optionC2 = math.random(optionsCD2Cnt)
-    local optionD2 = math.random(optionsCD2Cnt - 1)
+    local optionC2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
+    local optionD2 = rng:RandomInt(optionsCD2Cnt - 1 - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
