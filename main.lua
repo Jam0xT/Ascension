@@ -318,6 +318,91 @@ AscensionMod.NPCOptions = {
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
         }
+    },
+    ['devil'] = {
+        ['AB'] = {
+            ['获得 10 便士'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 10, true)
+            end,
+            ['获得 5 随机炸弹'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 5, true)
+            end,
+            ['获得 2 钥匙圈'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 2, true)
+            end,
+            ['获得 2 点射程'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 2
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+        },
+        ['CD1'] = {
+            ['获得 20 随机硬币'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 20, true)
+            end,
+            ['获得 10 随机炸弹'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 10, true)
+            end,
+            ['获得 5 随机钥匙'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 5, true)
+            end,
+        },
+        ['CD2'] = {
+            ['失去 2 点幸运'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:DonateLuck(-2)
+            end,
+            ['失去 一颗心 最大生命'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:AddMaxHearts(-2, false)
+            end,
+            ['获得 一颗碎心'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:AddBrokenHearts(1)
+            end,
+            ['元素反应'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:UsePoopSpell(PoopSpellType.SPELL_BURNING)
+                scheduler:once(function ()
+                    p0:UsePoopSpell(PoopSpellType.SPELL_FART)
+                end, 1)
+            end,
+            ['射程倍率 变为 35%'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.35
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+        }
     }
 }
 
