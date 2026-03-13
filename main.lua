@@ -103,54 +103,107 @@ AscensionMod.TextColor = {
 
 local game = Game()
 
-local ascensionDesc = {
+AscensionMod.ascensions = {
     ['0'] = '',
+    ['1'] = '',
+    ['2'] = '',
+    ['3'] = '',
+    ['4'] = '',
+    ['5'] = '',
+    ['6'] = '',
+    ['7'] = '',
+    ['8'] = '',
+    ['9'] = '',
+    ['10'] = '',
+    ['11'] = '',
+    ['12'] = '',
+    ['13'] = '',
+    ['14'] = '',
+    ['15'] = '',
+    ['16'] = '',
+    ['17'] = '',
+    ['18'] = '',
+    ['19'] = '',
+    ['20'] = '',
 }
 
------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------ 开局选项（天使） -------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------
-
-
-function AscensionMod:Start(isContinued)
-    if isContinued and AscensionMod.ConfirmedStartingOption then
-        return
-    end
+function AscensionMod:NewRunReset()
     scheduler:clear()
-
+    AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
     AscensionMod.playerStats = {
         rangeAdd = 0,
         rangeMul = 1,
     }
+end
 
-    local p0 = game:GetPlayer(0)
-    p0:AddCacheFlags(CacheFlag.CACHE_ALL, true)
+function AscensionMod:StartNewStage()
+    if AscensionMod:FirstStage() then
+        AscensionMod:NewRunReset()
+    end
 
-    AscensionMod:SpawnStartingAngelStatue()
+    local NPCID = AscensionMod:ChooseNPC()
 
+    AscensionMod.ConfirmedOption = false
+    AscensionMod.SelectedOption = 'A'
+
+    AscensionMod:SpawnAngelStatue()
     AscensionMod:DisablePlayerControls()
     AscensionMod:HidePlayer()
 
-    AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
 
     AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
-    AscensionMod:GetStartingOptions()
     AscensionMod:GetStartingDialogue()
-    AscensionMod.SelectedStartingOption = 'A'
-    AscensionMod.ConfirmedStartingOption = false
+    AscensionMod:GetStartingOptions()
+    AscensionMod.SelectedOption = 'A'
+    AscensionMod.ConfirmedOption = false
 end
-AscensionMod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, AscensionMod.Start)
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewStage)
 
 
-AscensionMod.ConfirmedStartingOption = false
-AscensionMod.SelectedStartingOption = 'A'
-AscensionMod.NextStartingOption = {
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- NPC ID 与 出现条件 -------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.NPCs = {
+    ['angel'] = function ()
+        if AscensionMod:FirstStage() then
+            return true
+        end
+        return false
+    end,
+    ['devil'] = function ()
+        if AscensionMod:FirstStage() then
+            return false
+        end
+        return true
+    end,
+}
+
+---@return string NPCID id of the chosen npc
+function AscensionMod:ChooseNPC()
+    local legitNPCIDList = AscensionMod:GetLegitNPCs()
+    return legitNPCIDList[math.random(#legitNPCIDList)]
+end
+
+function AscensionMod:GetLegitNPCs()
+    local legitNPCIDList = {}
+    for id, predicateFn in pairs(AscensionMod.NPCs) do
+        if predicateFn() then
+            table.insert(legitNPCIDList, id)
+        end
+    end
+    return legitNPCIDList;
+end
+
+
+AscensionMod.NextOption = {
     ['A'] = 'B',
     ['B'] = 'C',
     ['C'] = 'D',
     ['D'] = 'A',
 }
-AscensionMod.PrevStartingOption = {
+AscensionMod.PrevOption = {
     ['A'] = 'D',
     ['B'] = 'A',
     ['C'] = 'B',
@@ -164,6 +217,8 @@ AscensionMod.StartingDialogueList = {
 }
 AscensionMod.StartingDialogue = ''
 AscensionMod.FoundPoopLastRun = false
+
+
 function AscensionMod:GetStartingDialogue()
     local legitDialogueList = {}
     local length = 0
@@ -181,8 +236,10 @@ function AscensionMod:GetStartingDialogue()
     AscensionMod.StartingDialogue = legitDialogueList[math.random(length)]
     AscensionMod.FoundPoopLastRun = false
 end
+
+
 function AscensionMod:RenderStartingOptions()
-    if AscensionMod.ConfirmedStartingOption then
+    if AscensionMod.ConfirmedOption then
         return
     end
 
@@ -218,7 +275,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(80, 380))
     x = pos.X
     y = pos.Y
-    text = ascensionDesc[ascensionLevelDisplay]
+    text = AscensionMod.ascensions[ascensionLevelDisplay]
     length = font:GetStringWidth(text)
     scale = 1
     color = AscensionMod.TextColor['white']
@@ -233,7 +290,7 @@ function AscensionMod:RenderStartingOptions()
     text = AscensionMod.StartingOptions['A']
     length = font:GetStringWidth(text)
     scale = 1
-    if AscensionMod.SelectedStartingOption == 'A' then
+    if AscensionMod.SelectedOption == 'A' then
         color = AscensionMod.TextColor['gray']
     else
         color = AscensionMod.TextColor['white']
@@ -249,7 +306,7 @@ function AscensionMod:RenderStartingOptions()
     text = AscensionMod.StartingOptions['B']
     length = font:GetStringWidth(text)
     scale = 1
-    if AscensionMod.SelectedStartingOption == 'B' then
+    if AscensionMod.SelectedOption == 'B' then
         color = AscensionMod.TextColor['gray']
     else
         color = AscensionMod.TextColor['white']
@@ -265,7 +322,7 @@ function AscensionMod:RenderStartingOptions()
     text = AscensionMod.StartingOptions['C1']..' 但是 '..AscensionMod.StartingOptions['C2']
     length = font:GetStringWidth(text)
     scale = 1
-    if AscensionMod.SelectedStartingOption == 'C' then
+    if AscensionMod.SelectedOption == 'C' then
         color = AscensionMod.TextColor['gray']
     else
         color = AscensionMod.TextColor['white']
@@ -281,7 +338,7 @@ function AscensionMod:RenderStartingOptions()
     text = AscensionMod.StartingOptions['D1']..' 但是 '..AscensionMod.StartingOptions['D2']
     length = font:GetStringWidth(text)
     scale = 1
-    if AscensionMod.SelectedStartingOption == 'D' then
+    if AscensionMod.SelectedOption == 'D' then
         color = AscensionMod.TextColor['gray']
     else
         color = AscensionMod.TextColor['white']
@@ -298,8 +355,8 @@ local actionDownReleased = true
 local actionUpReleased = true
 local actionConfirmReleased = true
 ---@param entity Entity
-function AscensionMod:SwitchSeletedStartingOption(entity, _, _)
-    if AscensionMod.ConfirmedStartingOption then
+function AscensionMod:SwitchSeletedOption(entity, _, _)
+    if AscensionMod.ConfirmedOption then
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
@@ -308,7 +365,7 @@ function AscensionMod:SwitchSeletedStartingOption(entity, _, _)
     if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, 0) then
         if actionDownReleased then
             actionDownReleased = false
-            AscensionMod.SelectedStartingOption = AscensionMod.NextStartingOption[AscensionMod.SelectedStartingOption]
+            AscensionMod.SelectedOption = AscensionMod.NextOption[AscensionMod.SelectedOption]
         end
     else
         actionDownReleased = true
@@ -317,7 +374,7 @@ function AscensionMod:SwitchSeletedStartingOption(entity, _, _)
     if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, 0) then
         if actionUpReleased then
             actionUpReleased = false
-            AscensionMod.SelectedStartingOption = AscensionMod.PrevStartingOption[AscensionMod.SelectedStartingOption]
+            AscensionMod.SelectedOption = AscensionMod.PrevOption[AscensionMod.SelectedOption]
         end
     else
         actionUpReleased = true
@@ -332,7 +389,7 @@ function AscensionMod:SwitchSeletedStartingOption(entity, _, _)
         actionConfirmReleased = true
     end
 end
-AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedStartingOption)
+AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedOption)
 
 local startingOptionAB = {
     ['获得 10 便士'] = function()
@@ -420,14 +477,14 @@ local startingOptionCDDisadvantage = {
 
 
 function AscensionMod:ConfirmSeletedStartingOption()
-    if AscensionMod.ConfirmedStartingOption then
+    if AscensionMod.ConfirmedOption then
         return
     end
 
     game:GetPlayer(0):AnimateHappy()
 
-    AscensionMod.ConfirmedStartingOption = true
-    local option = AscensionMod.SelectedStartingOption;
+    AscensionMod.ConfirmedOption = true
+    local option = AscensionMod.SelectedOption;
     if option == 'A' or option == 'B' then
         local eventFn = startingOptionAB[AscensionMod.StartingOptions[option]]
         if eventFn ~= nil then
@@ -445,7 +502,7 @@ function AscensionMod:ConfirmSeletedStartingOption()
     end
 
     AscensionMod:ShowPlayer()
-    AscensionMod:RemoveStartingAngelStatue()
+    AscensionMod:RemoveAngelStatue()
 
     scheduler:once(function ()
         AscensionMod:EnablePlayerControls()
@@ -532,18 +589,27 @@ AscensionMod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, AscensionMod.OnEvaluate
 
 function AscensionMod:End(isLose)
     if not isLose then
-        AscensionMod.ascensionLevel = AscensionMod.ascensionLevel + 1
+        if AscensionMod.ascensionLevel < AscensionMod:GetMaxAscensionLevel() then
+            AscensionMod.ascensionLevel = AscensionMod.ascensionLevel + 1
+        end
         AscensionMod:SaveAscensionLevel(AscensionMod.ascensionLevel)
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_GAME_END, AscensionMod.End)
 
+function AscensionMod:GetMaxAscensionLevel() -- starts from 0
+    local i = 0
+    for _, _ in pairs(AscensionMod.ascensions) do
+        i = i + 1
+    end
+    return i - 1
+end
 
-function AscensionMod:SpawnStartingAngelStatue()
+function AscensionMod:SpawnAngelStatue()
     Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
 end
 
-function AscensionMod:RemoveStartingAngelStatue()
+function AscensionMod:RemoveAngelStatue()
     local entities = Isaac.GetRoomEntities()
     for _, entity in ipairs(entities) do
         if entity.Type == EntityType.ENTITY_EFFECT and entity.Variant == EffectVariant.ANGEL then
@@ -596,6 +662,16 @@ function AscensionMod:EnablePlayerControls()
         local player = game:GetPlayer(i)
         player.ControlsCooldown = 0
     end
+end
+
+function AscensionMod:FirstStage()
+    -- aka. basement 1 / cellar 1 / burning basement 1
+    local level = game:GetLevel()
+    local stage = level:GetStage()
+    if stage == 1 and (not level:IsAltStage()) then
+        return true
+    end
+    return false
 end
 
 function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
