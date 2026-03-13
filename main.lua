@@ -493,6 +493,7 @@ end
 
 
 function AscensionMod:SpawnStatue(NPCID)
+    print(NPCID, AscensionMod.NPCStatues[NPCID])
     AscensionMod.NPCStatues[NPCID][1]()
 end
 
@@ -578,7 +579,7 @@ function AscensionMod:RenderStartingOptions()
     local pos = Isaac.WorldToScreen(Vector(320, 220))
     local x = pos.X
     local y = pos.Y
-    local text = AscensionMod.dialogue
+    local text = tostring(AscensionMod.dialogue)
     local length = font:GetStringWidth(text)
     local scale = 1.7
     local color = AscensionMod.TextColor['white']
