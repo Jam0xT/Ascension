@@ -5,6 +5,14 @@ AscensionMod = RegisterMod("Ascension", 1)
 AscensionMod.SaveManager = include('save_manager')
 AscensionMod.SaveManager.Init(AscensionMod)
 
+local game = Game()
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 延时触发辅助工具 ---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 local scheduler = {
     init = function (self)
         AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, function ()
@@ -82,6 +90,12 @@ local scheduler = {
 }
 scheduler:init()
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 复制来的中文字体 ---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 local font = Font()
 function AscensionMod:LoadFont()
     local _, err = pcall(require, "")
@@ -96,12 +110,22 @@ function AscensionMod:LoadFont()
 end
 AscensionMod:LoadFont()
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 文本颜色预设 -------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 AscensionMod.TextColor = {
     ['white'] = KColor(1, 1, 1, 1),
     ['gray'] = KColor(.5, .5, .5, 1),
 }
 
-local game = Game()
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 进阶游戏内介绍文本 -------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 AscensionMod.ascensions = {
     ['0'] = '',
@@ -127,45 +151,33 @@ AscensionMod.ascensions = {
     ['20'] = '',
 }
 
-function AscensionMod:NewRunReset()
-    scheduler:clear()
-    AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
-    AscensionMod.playerStats = {
-        rangeAdd = 0,
-        rangeMul = 1,
-    }
-end
-
-function AscensionMod:StartNewStage()
-    if AscensionMod:FirstStage() then
-        AscensionMod:NewRunReset()
-    end
-
-    local NPCID = AscensionMod:ChooseNPC()
-
-    AscensionMod.ConfirmedOption = false
-    AscensionMod.SelectedOption = 'A'
-
-    AscensionMod:SpawnAngelStatue()
-    AscensionMod:DisablePlayerControls()
-    AscensionMod:HidePlayer()
-
-
-    AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
-    AscensionMod:GetStartingDialogue()
-    AscensionMod:GetStartingOptions()
-    AscensionMod.SelectedOption = 'A'
-    AscensionMod.ConfirmedOption = false
-end
-AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewStage)
-
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------- NPC ID 与 出现条件 -------------------------------------------------------------------
+---------------------------------------------------------------- 用于辅助选项切换 ---------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-AscensionMod.NPCs = {
+AscensionMod.NextOption = {
+    ['A'] = 'B',
+    ['B'] = 'C',
+    ['C'] = 'D',
+    ['D'] = 'A',
+}
+
+AscensionMod.PrevOption = {
+    ['A'] = 'D',
+    ['B'] = 'A',
+    ['C'] = 'B',
+    ['D'] = 'C',
+}
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- NPC 各项设置 ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.NPCPredicates = {
     ['angel'] = function ()
         if AscensionMod:FirstStage() then
             return true
@@ -180,15 +192,168 @@ AscensionMod.NPCs = {
     end,
 }
 
+AscensionMod.NPCDialogues = {
+    ['angel'] = {
+        ['至少……也要见到……第一坨大便吧……'] = function ()
+            return (AscensionMod:FirstStage() and (not AscensionMod.FoundPoopLastRun))
+        end,
+        ['你好……'] = function ()
+            return true
+        end,
+        ['我把你……带回来了……'] = function ()
+            return AscensionMod:FirstStage()
+        end
+    },
+    ['devil'] = {
+        ['至少……也要见到……第一坨大便吧……'] = function ()
+            return (AscensionMod:FirstStage() and (not AscensionMod.FoundPoopLastRun))
+        end,
+        ['代价……'] = function ()
+            return true
+        end
+    }
+}
+
+AscensionMod.NPCOptions = {
+    ['angel'] = {
+        ['AB'] = {
+            ['获得 10 便士'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 10, true)
+            end,
+            ['获得 5 随机炸弹'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 5, true)
+            end,
+            ['获得 2 钥匙圈'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 2, true)
+            end,
+            ['获得 2 点射程'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 2
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+        },
+        ['CD1'] = {
+            ['获得 20 随机硬币'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 20, true)
+            end,
+            ['获得 10 随机炸弹'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 10, true)
+            end,
+            ['获得 5 随机钥匙'] = function()
+                local p0 = game:GetPlayer(0)
+                scheduler:seq_n(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 1, 5, true)
+            end,
+        },
+        ['CD2'] = {
+            ['失去 2 点幸运'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:DonateLuck(-2)
+            end,
+            ['失去 一颗心 最大生命'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:AddMaxHearts(-2, false)
+            end,
+            ['获得 一颗碎心'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:AddBrokenHearts(1)
+            end,
+            ['元素反应'] = function()
+                local p0 = game:GetPlayer(0)
+                p0:UsePoopSpell(PoopSpellType.SPELL_BURNING)
+                scheduler:once(function ()
+                    p0:UsePoopSpell(PoopSpellType.SPELL_FART)
+                end, 1)
+            end,
+            ['射程倍率 变为 35%'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.35
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+        }
+    }
+}
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 每层发生事件 ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function AscensionMod:NewRunReset()
+    scheduler:clear()
+    AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
+    AscensionMod.playerStats = {
+        rangeAdd = 0,
+        rangeMul = 1,
+    }
+end
+
+function AscensionMod:StartNewStage()
+    if AscensionMod:FirstStage() then
+        AscensionMod:NewRunReset()
+    end
+
+    AscensionMod.NPCID = AscensionMod:GetNPC()
+
+    AscensionMod.Dialogue = AscensionMod:GetDialogue(AscensionMod.NPCID)
+
+    AscensionMod.StartingOptions = {} -- A, B, C1-C2, D1-D2
+    AscensionMod:SetStartingOptions()
+
+    AscensionMod.ConfirmedOption = false
+    AscensionMod.SelectedOption = 'A'
+
+    AscensionMod:SpawnAngelStatue()
+
+    AscensionMod:DisablePlayerControls()
+    AscensionMod:HidePlayer()
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewStage)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 选择 NPC 和 对话 ---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 ---@return string NPCID id of the chosen npc
-function AscensionMod:ChooseNPC()
+function AscensionMod:GetNPC()
     local legitNPCIDList = AscensionMod:GetLegitNPCs()
     return legitNPCIDList[math.random(#legitNPCIDList)]
 end
 
 function AscensionMod:GetLegitNPCs()
     local legitNPCIDList = {}
-    for id, predicateFn in pairs(AscensionMod.NPCs) do
+    for id, predicateFn in pairs(AscensionMod.NPCPredicates) do
         if predicateFn() then
             table.insert(legitNPCIDList, id)
         end
@@ -196,47 +361,55 @@ function AscensionMod:GetLegitNPCs()
     return legitNPCIDList;
 end
 
+---@param NPCID string The NPC you wish to pick a dialogue from
+---@return string dialogue A random legit dialogue from NPC
+function AscensionMod:GetDialogue(NPCID)
+    local dialoguePredicates = AscensionMod.NPCDialogues[NPCID]
+    if dialoguePredicates == nil then
+        print('Unknown NPC: '..tostring(NPCID))
+        return 'Error'
+    end
 
-AscensionMod.NextOption = {
-    ['A'] = 'B',
-    ['B'] = 'C',
-    ['C'] = 'D',
-    ['D'] = 'A',
-}
-AscensionMod.PrevOption = {
-    ['A'] = 'D',
-    ['B'] = 'A',
-    ['C'] = 'B',
-    ['D'] = 'C',
-}
-AscensionMod.StartingOptions = {['A'] = '', ['B'] = '', ['C1'] = '', ['C2'] = '', ['D1'] = '', ['D2'] = ''}
-AscensionMod.StartingDialogueList = {
-    "至少……也要见到……第一坨大便吧……",
-    "你好……",
-    "我把你……带回来了……"
-}
-AscensionMod.StartingDialogue = ''
-AscensionMod.FoundPoopLastRun = false
-
-
-function AscensionMod:GetStartingDialogue()
     local legitDialogueList = {}
-    local length = 0
-    for _, dialogue in ipairs(AscensionMod.StartingDialogueList) do
-        if dialogue == "至少……也要见到……第一坨大便吧……" then
-            if not AscensionMod.FoundPoopLastRun then
-                table.insert(legitDialogueList, dialogue)
-                length = length + 1
-            end
-        else
+    for dialogue, predicate in pairs(dialoguePredicates) do
+        if predicate() then
             table.insert(legitDialogueList, dialogue)
-            length = length + 1
         end
     end
-    AscensionMod.StartingDialogue = legitDialogueList[math.random(length)]
+
     AscensionMod.FoundPoopLastRun = false
+
+    return legitDialogueList[math.random(#legitDialogueList)]
 end
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 生成 NPC "雕像" ---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function AscensionMod:SpawnAngelStatue()
+    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
+end
+
+function AscensionMod:RemoveAngelStatue()
+    local entities = Isaac.GetRoomEntities()
+    for _, entity in ipairs(entities) do
+        if entity.Type == EntityType.ENTITY_EFFECT and entity.Variant == EffectVariant.ANGEL then
+            entity:Remove()
+        end
+    end
+end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 抽取 / 显示开局选项 ------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function AscensionMod:SetStartingOptions()
+
+end
 
 function AscensionMod:RenderStartingOptions()
     if AscensionMod.ConfirmedOption then
@@ -351,6 +524,11 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderStartingOptions)
 
 
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 切换 / 确认选项 ----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 local actionDownReleased = true
 local actionUpReleased = true
 local actionConfirmReleased = true
@@ -390,91 +568,6 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchSeletedOption)
-
-local startingOptionAB = {
-    ['获得 10 便士'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 10, true)
-    end,
-    ['获得 5 随机炸弹'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 5, true)
-    end,
-    ['获得 2 钥匙圈'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 2, true)
-    end,
-    ['获得 2 点射程'] = function()
-        local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 2
-        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
-    end,
-}
-local startingOptionCDAdvantage = {
-    ['获得 20 随机硬币'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 20, true)
-    end,
-    ['获得 10 随机炸弹'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 10, true)
-    end,
-    ['获得 5 随机钥匙'] = function()
-        local p0 = game:GetPlayer(0)
-        scheduler:seq_n(function ()
-            Isaac.Spawn(
-            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-        end, 1, 5, true)
-    end,
-}
-local startingOptionCDDisadvantage = {
-    ['失去 2 点幸运'] = function()
-        local p0 = game:GetPlayer(0)
-        p0:DonateLuck(-2)
-    end,
-    ['失去 一颗心 最大生命'] = function()
-        local p0 = game:GetPlayer(0)
-        p0:AddMaxHearts(-2, false)
-    end,
-    ['获得 一颗碎心'] = function()
-        local p0 = game:GetPlayer(0)
-        p0:AddBrokenHearts(1)
-    end,
-    ['元素反应'] = function()
-        local p0 = game:GetPlayer(0)
-        p0:UsePoopSpell(PoopSpellType.SPELL_BURNING)
-        scheduler:once(function ()
-            p0:UsePoopSpell(PoopSpellType.SPELL_FART)
-        end, 1)
-    end,
-    ['射程倍率 变为 35%'] = function()
-        local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.35
-        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
-    end,
-}
-
 
 function AscensionMod:ConfirmSeletedStartingOption()
     if AscensionMod.ConfirmedOption then
@@ -522,11 +615,11 @@ function AscensionMod:GetStartingOptions()
     for desc, _ in pairs(startingOptionAB) do
         i = i + 1
         j = j + 1
-        if i == optionA and AscensionMod.StartingOptions.A == '' then
+        if i == optionA and AscensionMod.StartingOptions.A == nil then
             AscensionMod.StartingOptions.A = desc
             j = j - 1
         end
-        if j == optionB and AscensionMod.StartingOptions.B == ''  then
+        if j == optionB and AscensionMod.StartingOptions.B == nil then
             AscensionMod.StartingOptions.B = desc
         end
     end
@@ -542,11 +635,11 @@ function AscensionMod:GetStartingOptions()
     for desc, _ in pairs(startingOptionCDAdvantage) do
         i = i + 1
         j = j + 1
-        if i == optionC1 and AscensionMod.StartingOptions['C1'] == '' then
+        if i == optionC1 and AscensionMod.StartingOptions['C1'] == nil then
             AscensionMod.StartingOptions['C1'] = desc
             j = j - 1
         end
-        if j == optionD1 and AscensionMod.StartingOptions['D1'] == ''  then
+        if j == optionD1 and AscensionMod.StartingOptions['D1'] == nil then
             AscensionMod.StartingOptions['D1'] = desc
         end
     end
@@ -562,15 +655,20 @@ function AscensionMod:GetStartingOptions()
     for desc, _ in pairs(startingOptionCDDisadvantage) do
         i = i + 1
         j = j + 1
-        if i == optionC2 and AscensionMod.StartingOptions['C2'] == '' then
+        if i == optionC2 and AscensionMod.StartingOptions['C2'] == nil then
             AscensionMod.StartingOptions['C2'] = desc
             j = j - 1
         end
-        if j == optionD2 and AscensionMod.StartingOptions['D2'] == ''  then
+        if j == optionD2 and AscensionMod.StartingOptions['D2'] == nil then
             AscensionMod.StartingOptions['D2'] = desc
         end
     end
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------- 控制玩家属性 ----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ---@param player EntityPlayer
@@ -585,6 +683,11 @@ function AscensionMod:OnEvaluateCache(player, cacheFlag)
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, AscensionMod.OnEvaluateCache)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------- 杂项 --------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 function AscensionMod:End(isLose)
@@ -603,19 +706,6 @@ function AscensionMod:GetMaxAscensionLevel() -- starts from 0
         i = i + 1
     end
     return i - 1
-end
-
-function AscensionMod:SpawnAngelStatue()
-    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
-end
-
-function AscensionMod:RemoveAngelStatue()
-    local entities = Isaac.GetRoomEntities()
-    for _, entity in ipairs(entities) do
-        if entity.Type == EntityType.ENTITY_EFFECT and entity.Variant == EffectVariant.ANGEL then
-            entity:Remove()
-        end
-    end
 end
 
 function AscensionMod:GetAscensionLevelFromSave()
@@ -674,6 +764,13 @@ function AscensionMod:FirstStage()
     return false
 end
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 至少……也要见到……第一坨大便吧…… --------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.FoundPoopLastRun = false -- 用于开局对话
 function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
     if AscensionMod.FoundPoopLastRun then
         return
