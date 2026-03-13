@@ -326,8 +326,8 @@ function AscensionMod:StartNewStage()
 
     AscensionMod.Dialogue = AscensionMod:GetDialogue(AscensionMod.NPCID)
 
-    AscensionMod.StartingOptions = {} -- A, B, C1-C2, D1-D2
-    AscensionMod:SetStartingOptions()
+    AscensionMod.Options = {} -- A, B, C1-C2, D1-D2
+    AscensionMod:SetOptions(AscensionMod.NPCID)
 
     AscensionMod.ConfirmedOption = false
     AscensionMod.SelectedOption = 'A'
@@ -366,7 +366,7 @@ end
 function AscensionMod:GetDialogue(NPCID)
     local dialoguePredicates = AscensionMod.NPCDialogues[NPCID]
     if dialoguePredicates == nil then
-        print('Unknown NPC: '..tostring(NPCID))
+        print('Error: Unknown NPC: '..tostring(NPCID))
         return 'Error'
     end
 
@@ -403,12 +403,67 @@ end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------- 抽取 / 显示开局选项 ------------------------------------------------------------------
+---------------------------------------------------------------- 抽取 / 显示进层选项 ------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-function AscensionMod:SetStartingOptions()
+---@param NPCID string The ID of the NPC you wish to choose options from
+function AscensionMod:SetOptions(NPCID)
+    if NPCID == nil then print('Error: NPC ID is nil while trying to set options.') return end
 
+    local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
+    if optionsAB == nil then
+        print('Error: No AB options found for NPC ID: '..tostring(NPCID))
+        return
+    end
+    local optionsABCnt = AscensionMod:GetTableSize(optionsAB)
+    local optionA = math.random(optionsABCnt)
+    local optionB = math.random(optionsABCnt - 1)
+    if optionB >= optionA then
+        optionB = optionB + 1
+    end
+    local i = 0
+    for desc, _ in pairs(optionsAB) do
+        i = i + 1
+        if i == optionA then AscensionMod.Options['A'] = desc end
+        if i == optionB then AscensionMod.Options['B'] = desc end
+    end
+
+    local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
+    if optionsCD1 == nil then
+        print('Error: No CD1 options found for NPC ID: '..tostring(NPCID))
+        return
+    end
+    local optionsCD1Cnt = AscensionMod:GetTableSize(optionsCD1)
+    local optionC1 = math.random(optionsCD1Cnt)
+    local optionD1 = math.random(optionsCD1Cnt - 1)
+    if optionD1 >= optionC1 then
+        optionD1 = optionD1 + 1
+    end
+    i = 0
+    for desc, _ in pairs(optionsCD1) do
+        i = i + 1
+        if i == optionC1 then AscensionMod.Options['C1'] = desc end
+        if i == optionD1 then AscensionMod.Options['D1'] = desc end
+    end
+
+    local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
+    if optionsCD2 == nil then
+        print('Error: No CD2 options found for NPC ID: '..tostring(NPCID))
+        return
+    end
+    local optionsCD2Cnt = AscensionMod:GetTableSize(optionsCD2)
+    local optionC2 = math.random(optionsCD2Cnt)
+    local optionD2 = math.random(optionsCD2Cnt - 1)
+    if optionD2 >= optionC2 then
+        optionD2 = optionD2 + 1
+    end
+    i = 0
+    for desc, _ in pairs(optionsCD2) do
+        i = i + 1
+        if i == optionC2 then AscensionMod.Options['C2'] = desc end
+        if i == optionD2 then AscensionMod.Options['D2'] = desc end
+    end
 end
 
 function AscensionMod:RenderStartingOptions()
@@ -460,7 +515,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 260))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['A']
+    text = AscensionMod.Options['A']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'A' then
@@ -476,7 +531,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 280))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['B']
+    text = AscensionMod.Options['B']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'B' then
@@ -492,7 +547,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 300))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['C1']..' 但是 '..AscensionMod.StartingOptions['C2']
+    text = AscensionMod.Options['C1']..' 但是 '..AscensionMod.Options['C2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'C' then
@@ -508,7 +563,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(320, 320))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.StartingOptions['D1']..' 但是 '..AscensionMod.StartingOptions['D2']
+    text = AscensionMod.Options['D1']..' 但是 '..AscensionMod.Options['D2']
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'D' then
@@ -579,16 +634,16 @@ function AscensionMod:ConfirmSeletedStartingOption()
     AscensionMod.ConfirmedOption = true
     local option = AscensionMod.SelectedOption;
     if option == 'A' or option == 'B' then
-        local eventFn = startingOptionAB[AscensionMod.StartingOptions[option]]
+        local eventFn = startingOptionAB[AscensionMod.Options[option]]
         if eventFn ~= nil then
             eventFn()
         end
     else -- C or D
-        local eventFn = startingOptionCDAdvantage[AscensionMod.StartingOptions[tostring(option)..'1']]
+        local eventFn = startingOptionCDAdvantage[AscensionMod.Options[tostring(option)..'1']]
         if eventFn ~= nil then
             eventFn()
         end
-        eventFn = startingOptionCDDisadvantage[AscensionMod.StartingOptions[tostring(option)..'2']]
+        eventFn = startingOptionCDDisadvantage[AscensionMod.Options[tostring(option)..'2']]
         if eventFn ~= nil then
             eventFn()
         end
@@ -600,69 +655,6 @@ function AscensionMod:ConfirmSeletedStartingOption()
     scheduler:once(function ()
         AscensionMod:EnablePlayerControls()
     end, 1)
-end
-
-
-function AscensionMod:GetStartingOptions()
-    local optionABSize = 0
-    for _, _ in pairs(startingOptionAB) do
-        optionABSize = optionABSize + 1
-    end
-    local optionA = math.random(optionABSize)
-    local optionB = math.random(optionABSize - 1)
-    local i = 0
-    local j = 0
-    for desc, _ in pairs(startingOptionAB) do
-        i = i + 1
-        j = j + 1
-        if i == optionA and AscensionMod.StartingOptions.A == nil then
-            AscensionMod.StartingOptions.A = desc
-            j = j - 1
-        end
-        if j == optionB and AscensionMod.StartingOptions.B == nil then
-            AscensionMod.StartingOptions.B = desc
-        end
-    end
-
-    local optionCDAdvantageSize = 0
-    for _, _ in pairs(startingOptionCDAdvantage) do
-        optionCDAdvantageSize = optionCDAdvantageSize + 1
-    end
-    local optionC1 = math.random(optionCDAdvantageSize)
-    local optionD1 = math.random(optionCDAdvantageSize - 1)
-    i = 0
-    j = 0
-    for desc, _ in pairs(startingOptionCDAdvantage) do
-        i = i + 1
-        j = j + 1
-        if i == optionC1 and AscensionMod.StartingOptions['C1'] == nil then
-            AscensionMod.StartingOptions['C1'] = desc
-            j = j - 1
-        end
-        if j == optionD1 and AscensionMod.StartingOptions['D1'] == nil then
-            AscensionMod.StartingOptions['D1'] = desc
-        end
-    end
-
-    local optionCDDisadvantageSize = 0
-    for _, _ in pairs(startingOptionCDDisadvantage) do
-        optionCDDisadvantageSize = optionCDDisadvantageSize + 1
-    end
-    local optionC2 = math.random(optionCDDisadvantageSize)
-    local optionD2 = math.random(optionCDDisadvantageSize - 1)
-    i = 0
-    j = 0
-    for desc, _ in pairs(startingOptionCDDisadvantage) do
-        i = i + 1
-        j = j + 1
-        if i == optionC2 and AscensionMod.StartingOptions['C2'] == nil then
-            AscensionMod.StartingOptions['C2'] = desc
-            j = j - 1
-        end
-        if j == optionD2 and AscensionMod.StartingOptions['D2'] == nil then
-            AscensionMod.StartingOptions['D2'] = desc
-        end
-    end
 end
 
 
@@ -701,11 +693,7 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_GAME_END, AscensionMod.End)
 
 function AscensionMod:GetMaxAscensionLevel() -- starts from 0
-    local i = 0
-    for _, _ in pairs(AscensionMod.ascensions) do
-        i = i + 1
-    end
-    return i - 1
+    return AscensionMod:GetTableSize(AscensionMod.ascensions)
 end
 
 function AscensionMod:GetAscensionLevelFromSave()
@@ -764,6 +752,15 @@ function AscensionMod:FirstStage()
     return false
 end
 
+---@param t table
+function AscensionMod:GetTableSize(t)
+    local s = 0
+    for _, _ in pairs(t) do
+        s = s + 1
+    end
+    return s
+end
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------- 至少……也要见到……第一坨大便吧…… --------------------------------------------------------
@@ -782,7 +779,6 @@ function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
             if gridEntity ~= nil then
                 if gridEntity:GetType() == GridEntityType.GRID_POOP then
                     AscensionMod.FoundPoopLastRun = true
-                    -- print('poop')
                 end
             end
         end, 1)
