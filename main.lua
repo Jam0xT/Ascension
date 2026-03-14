@@ -377,31 +377,31 @@ AscensionMod.NPCOptionEvents = {
                 local p0 = game:GetPlayer(0)
                 scheduler:once(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1)
                 scheduler:once(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 2)
                 scheduler:once(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 3)
                 scheduler:once(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 4)
             end,
             ['2'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 4, true)
             end,
             ['3'] = function ()
@@ -532,6 +532,7 @@ AscensionMod.NPCDialogueColor = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+local EXTRA_BOMB_ON_START = 1
 function AscensionMod:NewRunReset()
     seeds = game:GetSeeds()
     startSeed = seeds:GetStartSeed()
@@ -553,6 +554,14 @@ function AscensionMod:NewRunReset()
         luckMul = 1,
     }
     AscensionMod.stageCnt = 0
+    local p0 = game:GetPlayer(0)
+    p0:AddBombs(EXTRA_BOMB_ON_START)
+    if p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
+        Isaac.Spawn(
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+    end
+
 end
 
 function AscensionMod:StartNewStage()
