@@ -422,6 +422,11 @@ AscensionMod.NPCOptions = {
     }
 }
 
+AscensionMod.NPCDialogueColor = {
+    ['angel'] = KColor(1, .98, .76, 1), -- light yellow
+    ['devil'] = KColor(.42, 0, .07, 1), -- dark red
+}
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------- 每层发生事件 ------------------------------------------------------------------------
@@ -605,7 +610,7 @@ function AscensionMod:RenderDialogueText()
     local text = tostring(AscensionMod.dialogue)
     local length = font:GetStringWidth(text)
     local scale = 1.7
-    local color = AscensionMod.TextColor['white']
+    local color = AscensionMod.NPCDialogueColor[AscensionMod.NPCID]
     font:DrawStringScaled(text,
         x - length * scale / 2, y,
         scale, scale,
