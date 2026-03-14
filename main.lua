@@ -309,7 +309,7 @@ AscensionMod.NPCOptions = {
             ['获得 3 射程'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 3
-                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
             ['获得 1.5 幸运'] = function ()
                 local p0 = game:GetPlayer(0)
