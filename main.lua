@@ -585,16 +585,19 @@ function AscensionMod:SetOptions(NPCID)
     end
 end
 
-function AscensionMod:RenderStartingOptions()
+function AscensionMod:RenderMenu()
     if AscensionMod.isOptionConfirmed then
         return
     end
 
-    local ascensionLevelDisplay = tostring(AscensionMod.ascensionLevel)
-    if ascensionLevelDisplay == 'nil' then
-        ascensionLevelDisplay = '0'
-    end
+    AscensionMod:RenderDialogueText()
+    AscensionMod:RenderAscensionText()
+    AscensionMod:RenderOptionsText()
+    AscensionMod:RenderExtraInfoText()
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderMenu)
 
+function AscensionMod:RenderDialogueText()
     local pos = Isaac.WorldToScreen(Vector(320, 220))
     local x = pos.X
     local y = pos.Y
@@ -606,14 +609,21 @@ function AscensionMod:RenderStartingOptions()
         x - length * scale / 2, y,
         scale, scale,
         color)
+end
 
-    pos = Isaac.WorldToScreen(Vector(80, 360))
-    x = pos.X
-    y = pos.Y
-    text = "进阶: "..ascensionLevelDisplay
-    length = font:GetStringWidth(text)
-    scale = 1
-    color = AscensionMod.TextColor['white']
+function AscensionMod:RenderAscensionText()
+    local ascensionLevelDisplay = tostring(AscensionMod.ascensionLevel)
+    if ascensionLevelDisplay == 'nil' then
+        ascensionLevelDisplay = '0'
+    end
+
+    local pos = Isaac.WorldToScreen(Vector(80, 360))
+    local x = pos.X
+    local y = pos.Y
+    local text = "进阶: "..ascensionLevelDisplay
+    local length = font:GetStringWidth(text)
+    local scale = 1
+    local color = AscensionMod.TextColor['white']
     font:DrawStringScaled(text,
         x, y,
         scale, scale,
@@ -630,13 +640,16 @@ function AscensionMod:RenderStartingOptions()
         x, y,
         scale, scale,
         color)
+end
 
-    pos = Isaac.WorldToScreen(Vector(320, 260))
-    x = pos.X
-    y = pos.Y
-    text = tostring(AscensionMod.options['A'])
-    length = font:GetStringWidth(text)
-    scale = 1
+function AscensionMod:RenderOptionsText()
+    local pos = Isaac.WorldToScreen(Vector(320, 260))
+    local x = pos.X
+    local y = pos.Y
+    local text = tostring(AscensionMod.options['A'])
+    local length = font:GetStringWidth(text)
+    local scale = 1
+    local color
     if AscensionMod.SelectedOption == 'A' then
         color = AscensionMod.TextColor['gray']
     else
@@ -695,7 +708,31 @@ function AscensionMod:RenderStartingOptions()
         scale, scale,
         color)
 end
-AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderStartingOptions)
+
+function AscensionMod:RenderExtraInfoText()
+    local pos = Isaac.WorldToScreen(Vector(565, 145))
+    local x = pos.X
+    local y = pos.Y
+    local text = '↑ ↓ 切换选项'
+    local length = font:GetStringWidth(text)
+    local scale = 1
+    local color = AscensionMod.TextColor['white']
+    font:DrawStringScaled(text,
+        x - length * scale, y,
+        scale, scale,
+        color)
+    pos = Isaac.WorldToScreen(Vector(565, 170))
+    x = pos.X
+    y = pos.Y
+    text = '← → 切换菜单'
+    length = font:GetStringWidth(text)
+    scale = 1
+    color = AscensionMod.TextColor['white']
+    font:DrawStringScaled(text,
+        x - length * scale, y,
+        scale, scale,
+        color)
+end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
