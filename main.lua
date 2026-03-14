@@ -604,7 +604,7 @@ end
 function AscensionMod:GetDialogue(NPCID)
     local dialoguePredicates = AscensionMod.NPCDialogues[NPCID]
     if dialoguePredicates == nil then
-        print('Error: Unknown NPC: '..tostring(NPCID))
+        if AscensionMod.debug then print('Error: Unknown NPC: '..tostring(NPCID)) end
         return 'Error'
     end
 
@@ -648,11 +648,11 @@ end
 AscensionMod.options = {}
 ---@param NPCID string The ID of the NPC you wish to choose options from
 function AscensionMod:SetOptions(NPCID)
-    if NPCID == nil then print('Error: NPC ID is nil while trying to set options.') return end
+    if NPCID == nil then if AscensionMod.debug then print('Error: NPC ID is nil while trying to set options.') end return end
 
     local optionABDescs = AscensionMod.NPCOptionEvents[NPCID]['AB']
     if optionABDescs == nil then
-        print('Error: No AB option descriptions found for NPC ID: '..tostring(NPCID))
+        if AscensionMod.debug then print('Error: No AB option descriptions found for NPC ID: '..tostring(NPCID)) end
         return
     end
     local legitOptionABIDs = {}
@@ -689,7 +689,7 @@ function AscensionMod:SetOptions(NPCID)
 
     local optionCD1Descs = AscensionMod.NPCOptionEvents[NPCID]['CD1']
     if optionCD1Descs == nil then
-        print('Error: No CD1 options found for NPC ID: '..tostring(NPCID))
+        if AscensionMod.debug then print('Error: No CD1 options found for NPC ID: '..tostring(NPCID)) end
         return
     end
     local legitOptionCD1IDs = {}
@@ -726,7 +726,7 @@ function AscensionMod:SetOptions(NPCID)
 
     local optionCD2Descs = AscensionMod.NPCOptionEvents[NPCID]['CD2']
     if optionCD2Descs == nil then
-        print('Error: No CD2 options found for NPC ID: '..tostring(NPCID))
+        if AscensionMod.debug then print('Error: No CD2 options found for NPC ID: '..tostring(NPCID)) end
         return
     end
     local legitOptionsCD2 = {}
@@ -846,7 +846,7 @@ function AscensionMod:RenderOptionsText()
     local NPCID = AscensionMod.NPCID
     local optionDescs = AscensionMod.NPCOptionsDesc[NPCID]
     if optionDescs == nil then
-        print('Error: No option descriptions found for NPC: '..tostring(NPCID))
+        if AscensionMod.debug then print('Error: No option descriptions found for NPC: '..tostring(NPCID)) end
         return
     end
 
@@ -1126,15 +1126,15 @@ function AscensionMod:ConfirmSeletedOption()
         if option == 'A' or option == 'B' then
             optionID = AscensionMod.options[option]
             eventFn = optionABEvents[optionID]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
+            if eventFn ~= nil then eventFn() else if AscensionMod.debug then print('Error: No event function found for: '..tostring(optionID)) end end
         else
             optionID = AscensionMod.options[tostring(option)..'1']
             eventFn = optionCD1Events[optionID]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
+            if eventFn ~= nil then eventFn() else if AscensionMod.debug then print('Error: No event function found for: '..tostring(optionID)) end end
 
             optionID = AscensionMod.options[tostring(option)..'2']
             eventFn = optionCD2Events[optionID]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
+            if eventFn ~= nil then eventFn() else if AscensionMod.debug then print('Error: No event function found for: '..tostring(optionID)) end end
         end
 
         AscensionMod:ShowPlayer()
@@ -1146,7 +1146,7 @@ function AscensionMod:ConfirmSeletedOption()
     elseif AscensionMod.controledField == 'ascension' then
         AscensionMod.controledField = 'option'
     else
-        print('Error: unknown controled field: '..tostring(AscensionMod.controledField))
+        if AscensionMod.debug then print('Error: unknown controled field: '..tostring(AscensionMod.controledField)) end
     end
 end
 
