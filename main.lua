@@ -1104,7 +1104,10 @@ function AscensionMod:OnEvaluateCache(player, cacheFlag)
     if cacheFlag == CacheFlag.CACHE_FIREDELAY then
         local d = player.MaxFireDelay
         local t = 30 / (d + 1) -- tears
-        t = (t * stats.tearsAdd) * stats.tearsMul
+        t = (t + stats.tearsAdd) * stats.tearsMul
+        if t < 0 then
+            t = 0
+        end
         d = (30 / t) - 1
         player.MaxFireDelay = d
     end
