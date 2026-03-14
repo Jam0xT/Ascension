@@ -283,7 +283,8 @@ AscensionMod.NPCOptionPredicates = {
     ['angel'] = {
         ['AB'] = {
             ['失去 一颗 碎心'] = function ()
-                
+                local p0 = game:GetPlayer(0)
+                return (p0:GetBrokenHearts() >= 1)
             end
         }
     }
@@ -303,6 +304,11 @@ AscensionMod.NPCOptions = {
             ['获得 0.08 移速'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.08
+                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+            end,
+            ['获得 3 射程'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 3
                 p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
             end,
             ['获得 1.5 幸运'] = function ()
@@ -347,9 +353,33 @@ AscensionMod.NPCOptions = {
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 4, true)
             end,
+            ['获得 3 幸运'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 3
+                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+            end,
+            ['获得 0.15 移速'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.15
+                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+            end,
+            ['失去 1 颗碎心'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddBrokenHearts(-1)
+            end
         },
         ['CD2'] = {
-            ['失去 2 点幸运'] = function()
+            ['虚弱'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.4
+                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd - 0.2
+                p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
+            end,
+            ['萎靡'] = function()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.7
+                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
             end,
         }
     },
@@ -1064,27 +1094,31 @@ end
 ---@param player EntityPlayer
 ---@param cacheFlag CacheFlag
 function AscensionMod:OnEvaluateCache(player, cacheFlag)
-    local stats = AscensionMod.playerStats;
+    local stats = AscensionMod.playerStats
     if stats == nil then
         return
     end
     if cacheFlag == CacheFlag.CACHE_SPEED then
-        player.MoveSpeed = (player.MoveSpeed + stats.speedAdd) * stats.speedMul;
+        player.MoveSpeed = (player.MoveSpeed + stats.speedAdd) * stats.speedMul
     end
     if cacheFlag == CacheFlag.CACHE_FIREDELAY then
-        player.MaxFireDelay = (player.MaxFireDelay + stats.tearsAdd) * stats.tearsMul;
+        local d = player.MaxFireDelay
+        local t = 30 / (d + 1) -- tears
+        t = (t * stats.tearsAdd) * stats.tearsMul
+        d = (30 / t) - 1
+        player.MaxFireDelay = d
     end
     if cacheFlag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = (player.Damage + stats.dmgAdd) * stats.dmgMul;
+        player.Damage = (player.Damage + stats.dmgAdd) * stats.dmgMul
     end
     if cacheFlag == CacheFlag.CACHE_RANGE then
-        player.TearRange = (player.TearRange + stats.rangeAdd * 40) * stats.rangeMul;
+        player.TearRange = (player.TearRange + stats.rangeAdd * 40) * stats.rangeMul
     end
     if cacheFlag == CacheFlag.CACHE_SHOTSPEED then
-        player.ShotSpeed = (player.ShotSpeed + stats.shotSpeedAdd) * stats.shotSpeedMul;
+        player.ShotSpeed = (player.ShotSpeed + stats.shotSpeedAdd) * stats.shotSpeedMul
     end
     if cacheFlag == CacheFlag.CACHE_LUCK then
-        player.Luck = (player.Luck + stats.luckAdd) * stats.luckMul;
+        player.Luck = (player.Luck + stats.luckAdd) * stats.luckMul
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, AscensionMod.OnEvaluateCache)
