@@ -306,6 +306,7 @@ AscensionMod.NPCOptionsDesc = {
         ['CD2'] = {
             ['1'] = '虚弱',
             ['2'] = '萎靡',
+            ['3'] = '惩戒',
         }
     }
 }
@@ -390,7 +391,7 @@ AscensionMod.NPCOptionEvents = {
                     AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
                 end, 4)
             end,
-            ['2'] = function()
+            ['2'] = function ()
                 scheduler:seq_n(function ()
                     AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
                 end, 1, 4, true)
@@ -434,18 +435,21 @@ AscensionMod.NPCOptionEvents = {
             end,
         },
         ['CD2'] = {
-            ['1'] = function()
+            ['1'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.4
+                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.3 + 0.05 * AscensionMod.stageCnt)
                 p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
-                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd - 0.2
+                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd - (0.2 + 0.03 * AscensionMod.stageCnt)
                 p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
             end,
-            ['2'] = function()
+            ['2'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.7
+                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.5 + 0.1 * AscensionMod.stageCnt)
                 p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
             end,
+            ['3'] = function ()
+                
+            end
         }
     },
     ['devil'] = {
@@ -560,6 +564,7 @@ function AscensionMod:NewRunReset()
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
 
+    AscensionMod.Angel.discipline = false
 end
 
 function AscensionMod:StartNewStage()
@@ -1352,6 +1357,25 @@ function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
 end
 AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.LookForPoop)
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 天使 -------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.Angel = {}
+function AscensionMod.Angel:Discipline()
+    if not AscensionMod.Angel.discipline then
+        return
+    end
+    local room = game:GetRoom()
+    if room:GetType() == RoomType.ROOM_DEVIL then
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.5)
+        p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, AscensionMod.Angel.Discipline)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------- 进阶 0 -----------------------------------------------------------------------
