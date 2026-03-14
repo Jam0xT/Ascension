@@ -282,10 +282,21 @@ AscensionMod.NPCStatues = {
 AscensionMod.NPCOptionPredicates = {
     ['angel'] = {
         ['AB'] = {
-            ['失去 一颗 碎心'] = function ()
+            ['生成 1 颗魂心'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+        },
+        ['CD1'] = {
+            ['获得 1 最大生命'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+            ['失去 1 颗碎心'] = function ()
                 local p0 = game:GetPlayer(0)
                 return (p0:GetBrokenHearts() >= 1)
-            end
+            end,
+            ['获得 1 颗永恒之心'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
         }
     }
 }
@@ -293,17 +304,17 @@ AscensionMod.NPCOptionPredicates = {
 AscensionMod.NPCOptions = {
     ['angel'] = {
         ['AB'] = {
-            ['获得 2 钥匙圈'] = function()
+            ['生成 2 钥匙圈'] = function()
                 local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
+                for _ = 1, 2 do
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 2, true)
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end
             end,
-            ['获得 0.08 移速'] = function ()
+            ['获得 0.05 移速'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.08
+                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.05
                 p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
             end,
             ['获得 3 射程'] = function ()
@@ -311,14 +322,26 @@ AscensionMod.NPCOptions = {
                 AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 3
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
-            ['获得 1.5 幸运'] = function ()
+            ['获得 0.5 弹速'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 1.5
+                AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd + 0.5
+                p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
+            end,
+            ['失去 0.3 弹速'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd - 0.3
+                p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
+            end,
+            ['获得 1 幸运'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 1
                 p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
             end,
-            ['获得 一颗 魂心'] = function ()
+            ['生成 1 颗魂心'] = function ()
                 local p0 = game:GetPlayer(0)
-                p0:AddSoulHearts(2)
+                Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, HeartSubType.HEART_SOUL,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
             end,
         },
         ['CD1'] = {
@@ -363,10 +386,26 @@ AscensionMod.NPCOptions = {
                 AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.15
                 p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
             end,
+            ['获得 1 颗心最大生命'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddMaxHearts(2, true)
+            end,
+            ['获得 1 颗永恒之心'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddEternalHearts(1)
+            end,
             ['失去 1 颗碎心'] = function ()
                 local p0 = game:GetPlayer(0)
                 p0:AddBrokenHearts(-1)
-            end
+            end,
+            ['获得 2 张神圣卡'] = function ()
+                local p0 = game:GetPlayer(0)
+                for _ = 1, 2 do
+                    Isaac.Spawn(
+                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
+                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end
+            end,
         },
         ['CD2'] = {
             ['虚弱'] = function()
@@ -1219,6 +1258,15 @@ function AscensionMod:Debug(toState)
     else
         AscensionMod.debug = toState
     end
+end
+
+function AscensionMod:KeeperOrLost()
+    local p0 = game:GetPlayer(0)
+    if p0:GetPlayerType() == PlayerType.PLAYER_KEEPER or p0:GetPlayerType() == PlayerType.PLAYER_KEEPER_B or
+        p0:GetPlayerType() == PlayerType.PLAYER_THELOST or p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
+        return true
+    end
+    return false
 end
 
 
