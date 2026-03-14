@@ -552,12 +552,15 @@ function AscensionMod:NewRunReset()
         luckAdd = 0,
         luckMul = 1,
     }
+    AscensionMod.stageCnt = 0
 end
 
 function AscensionMod:StartNewStage()
     if AscensionMod:FirstStage() then
         AscensionMod:NewRunReset()
     end
+
+    AscensionMod.stageCnt = AscensionMod.stageCnt + 1
 
     AscensionMod.NPCID = AscensionMod:GetNPC()
 
