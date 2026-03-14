@@ -176,6 +176,16 @@ AscensionMod.PrevOption = {
     ['D'] = 'C',
 }
 
+AscensionMod.NextControledField = {
+    ['option'] = 'ascension',
+    ['ascension'] = 'option'
+}
+
+AscensionMod.PrevControledField = {
+    ['option'] = 'ascension',
+    ['ascension'] = 'option'
+}
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------- NPC 各项设置 ------------------------------------------------------------------------
@@ -441,6 +451,7 @@ function AscensionMod:StartNewStage()
     AscensionMod.options = {} -- A, B, C1-C2, D1-D2
     AscensionMod:SetOptions(AscensionMod.NPCID)
 
+    AscensionMod.controledField = 'option'
     AscensionMod.isOptionConfirmed = false
     AscensionMod.SelectedOption = 'A'
 
@@ -611,7 +622,7 @@ function AscensionMod:RenderStartingOptions()
     pos = Isaac.WorldToScreen(Vector(80, 380))
     x = pos.X
     y = pos.Y
-    text = AscensionMod.ascensions[ascensionLevelDisplay]
+    text = tostring(AscensionMod.ascensions[ascensionLevelDisplay])
     length = font:GetStringWidth(text)
     scale = 1
     color = AscensionMod.TextColor['white']
@@ -688,16 +699,110 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderStartin
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------- 切换 / 确认选项 ----------------------------------------------------------------------
+---------------------------------------------------------------- 选择操作区域 -------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+local actionLeftReleased = true
+local actionRightReleased = true
+function AscensionMod:SwitchControledField(entity, _, _)
+    if AscensionMod.isOptionConfirmed then
+        return
+    end
+    if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
+        return
+    end
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, 0) then
+        if actionLeftReleased then
+            actionLeftReleased = false
+            AscensionMod.controledField = AscensionMod.PrevControledField[AscensionMod.controledField]
+        end
+    else
+        actionLeftReleased = true
+    end
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, 0) then
+        if actionRightReleased then
+            actionRightReleased = false
+            AscensionMod.controledField = AscensionMod.NextControledField[AscensionMod.controledField]
+        end
+    else
+        actionRightReleased = true
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchControledField)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 选择进阶等级 -------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 local actionDownReleased = true
 local actionUpReleased = true
 local actionConfirmReleased = true
+function AscensionMod:SwitchAscensionLevel(entity, _, _)
+    if AscensionMod.isOptionConfirmed or AscensionMod.controledField ~= 'ascension' then
+        return
+    end
+    if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
+        return
+    end
+
+    local maxSavedAscensionLevel = AscensionMod:GetAscensionLevelFromSave()
+    local maxDefinedAscensionLevel = AscensionMod:GetMaxAscensionLevel()
+    local maxAscensionLevel
+    if AscensionMod.debug then
+        maxAscensionLevel = maxDefinedAscensionLevel
+    else
+        maxAscensionLevel = maxSavedAscensionLevel
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, 0) then
+        if actionDownReleased then
+            actionDownReleased = false
+            if AscensionMod.ascensionLevel < maxAscensionLevel then
+                AscensionMod.ascensionLevel = AscensionMod.ascensionLevel + 1
+            else
+                AscensionMod.ascensionLevel = 0
+            end
+        end
+    else
+        actionDownReleased = true
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, 0) then
+        if actionUpReleased then
+            actionUpReleased = false
+            if AscensionMod.ascensionLevel > 0 then
+                AscensionMod.ascensionLevel = AscensionMod.ascensionLevel - 1
+            else
+                AscensionMod.ascensionLevel = maxAscensionLevel
+            end
+        end
+    else
+        actionUpReleased = true
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUCONFIRM, 0) then
+        if actionConfirmReleased then
+            actionConfirmReleased = false
+            AscensionMod:ConfirmSeletedOption()
+        end
+    else
+        actionConfirmReleased = true
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.SwitchAscensionLevel)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 切换 / 确认选项 ----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 ---@param entity Entity
 function AscensionMod:SwitchSeletedOption(entity, _, _)
-    if AscensionMod.isOptionConfirmed then
+    if AscensionMod.isOptionConfirmed or AscensionMod.controledField ~= 'option' then
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
@@ -737,39 +842,45 @@ function AscensionMod:ConfirmSeletedOption()
         return
     end
 
-    for i = 0, game:GetNumPlayers() - 1 do
-        game:GetPlayer(i):AnimateHappy()
-    end
+    if AscensionMod.controledField == 'option' then
+        for i = 0, game:GetNumPlayers() - 1 do
+            game:GetPlayer(i):AnimateHappy()
+        end
 
-    AscensionMod.isOptionConfirmed = true
-    local option = AscensionMod.SelectedOption;
+        AscensionMod.isOptionConfirmed = true
+        local option = AscensionMod.SelectedOption;
 
-    local NPCID = AscensionMod.NPCID
-    local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
-    local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
-    local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
-    local key
-    local eventFn
-    if option == 'A' or option == 'B' then
-        key = AscensionMod.options[option]
-        eventFn = optionsAB[key]
-        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+        local NPCID = AscensionMod.NPCID
+        local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
+        local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
+        local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
+        local key
+        local eventFn
+        if option == 'A' or option == 'B' then
+            key = AscensionMod.options[option]
+            eventFn = optionsAB[key]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+        else
+            key = AscensionMod.options[tostring(option)..'1']
+            eventFn = optionsCD1[key]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+
+            key = AscensionMod.options[tostring(option)..'2']
+            eventFn = optionsCD2[key]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+        end
+
+        AscensionMod:ShowPlayer()
+        AscensionMod:RemoveStatue(NPCID)
+
+        scheduler:once(function ()
+            AscensionMod:EnablePlayerControls()
+        end, 1) -- 延迟 1 帧防止按空格选择时同时触发主动
+    elseif AscensionMod.controledField == 'ascension' then
+        AscensionMod.controledField = 'option'
     else
-        key = AscensionMod.options[tostring(option)..'1']
-        eventFn = optionsCD1[key]
-        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
-
-        key = AscensionMod.options[tostring(option)..'2']
-        eventFn = optionsCD2[key]
-        if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+        print('Error: unknown controled field: '..tostring(AscensionMod.controledField))
     end
-
-    AscensionMod:ShowPlayer()
-    AscensionMod:RemoveStatue(NPCID)
-
-    scheduler:once(function ()
-        AscensionMod:EnablePlayerControls()
-    end, 1) -- 延迟 1 帧防止按空格选择时同时触发主动
 end
 
 
@@ -808,7 +919,7 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_GAME_END, AscensionMod.End)
 
 function AscensionMod:GetMaxAscensionLevel() -- starts from 0
-    return AscensionMod:GetTableSize(AscensionMod.ascensions)
+    return AscensionMod:GetTableSize(AscensionMod.ascensions) - 1
 end
 
 function AscensionMod:GetAscensionLevelFromSave()
@@ -874,6 +985,16 @@ function AscensionMod:GetTableSize(t)
         s = s + 1
     end
     return s
+end
+
+AscensionMod.debug = false
+---@param toState boolean
+function AscensionMod:Debug(toState)
+    if toState == nil then
+        AscensionMod.debug = not AscensionMod.debug
+    else
+        AscensionMod.debug = toState
+    end
 end
 
 
