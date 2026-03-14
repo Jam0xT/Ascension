@@ -195,13 +195,28 @@ AscensionMod.PrevControledField = {
 
 AscensionMod.NPCPredicates = {
     ['angel'] = function ()
+        -- 第一层必出 二三章可出 大教堂可出
         if AscensionMod:FirstStage() then
             return true
+        else
+            local level = game:GetLevel()
+            local stage = level:GetStage()
+            if stage == LevelStage.STAGE2_1 or stage == LevelStage.STAGE2_2 or
+                stage == LevelStage.STAGE3_1 or stage == LevelStage.STAGE3_2 or
+                (stage == LevelStage.STAGE5 and level:GetStageType() == StageType.STAGETYPE_WOTL) then -- cathedral
+                return true
+            end
         end
         return false
     end,
     ['devil'] = function ()
+        -- 除了第一层和大教堂都可出
         if AscensionMod:FirstStage() then
+            return false
+        end
+        local level = game:GetLevel()
+        local stage = level:GetStage()
+        if (stage == LevelStage.STAGE5 and level:GetStageType() == StageType.STAGETYPE_WOTL) then
             return false
         end
         return true
@@ -218,15 +233,30 @@ AscensionMod.NPCDialogues = {
         end,
         ['我把你……带回来了……'] = function ()
             return AscensionMod:FirstStage()
-        end
+        end,
+        ['重铸……天使荣耀……'] = function ()
+            return true
+        end,
+        ['……诱惑……拒绝……'] = function ()
+            return true
+        end,
+        ['我……等着……'] = function ()
+            return true
+        end,
     },
     ['devil'] = {
-        ['至少……也要见到……第一坨大便吧……'] = function ()
-            return (AscensionMod:FirstStage() and (not AscensionMod.FoundPoopLastRun))
-        end,
         ['代价……'] = function ()
             return true
-        end
+        end,
+        ['这样……才对……'] = function ()
+            return true
+        end,
+        ['……做何……交易……'] = function ()
+            return true
+        end,
+        ['力量……'] = function ()
+            return true
+        end,
     }
 }
 
@@ -249,25 +279,19 @@ AscensionMod.NPCStatues = {
     }
 }
 
+AscensionMod.NPCOptionPredicates = {
+    ['angel'] = {
+        ['AB'] = {
+            ['失去 一颗 碎心'] = function ()
+                
+            end
+        }
+    }
+}
+
 AscensionMod.NPCOptions = {
     ['angel'] = {
         ['AB'] = {
-            ['获得 10 便士'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 10, true)
-            end,
-            ['获得 5 随机炸弹'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 5, true)
-            end,
             ['获得 2 钥匙圈'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
@@ -276,67 +300,69 @@ AscensionMod.NPCOptions = {
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 2, true)
             end,
-            ['获得 2 点射程'] = function()
+            ['获得 0.08 移速'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 2
-                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.08
+                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+            end,
+            ['获得 1.5 幸运'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 1.5
+                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+            end,
+            ['获得 一颗 魂心'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddSoulHearts(2)
             end,
         },
         ['CD1'] = {
-            ['获得 20 随机硬币'] = function()
+            ['获得 钥匙 全家福'] = function()
                 local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
+                scheduler:once(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, 0,
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL,
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 20, true)
+                end, 1)
+                scheduler:once(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 2)
+                scheduler:once(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 3)
+                scheduler:once(function ()
+                    Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
+                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                end, 4)
             end,
-            ['获得 10 随机炸弹'] = function()
+            ['获得 4 金钥匙'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
                     Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
+                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 10, true)
-            end,
-            ['获得 5 随机钥匙'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 5, true)
+                end, 1, 4, true)
             end,
         },
         ['CD2'] = {
             ['失去 2 点幸运'] = function()
-                local p0 = game:GetPlayer(0)
-                p0:DonateLuck(-2)
-            end,
-            ['失去 一颗心 最大生命'] = function()
-                local p0 = game:GetPlayer(0)
-                p0:AddMaxHearts(-2, false)
-            end,
-            ['获得 一颗碎心'] = function()
-                local p0 = game:GetPlayer(0)
-                p0:AddBrokenHearts(1)
-            end,
-            ['元素反应'] = function()
-                local p0 = game:GetPlayer(0)
-                p0:UsePoopSpell(PoopSpellType.SPELL_BURNING)
-                scheduler:once(function ()
-                    p0:UsePoopSpell(PoopSpellType.SPELL_FART)
-                end, 1)
-            end,
-            ['射程倍率 变为 35%'] = function()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.35
-                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
         }
     },
     ['devil'] = {
         ['AB'] = {
+        },
+        ['CD1'] = {
+        },
+        ['CD2'] = {
+        }
+    },
+    ['placeholder'] = {
+        ['AB'] = {
             ['获得 10 便士'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
@@ -344,22 +370,6 @@ AscensionMod.NPCOptions = {
                     EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY,
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 10, true)
-            end,
-            ['获得 5 随机炸弹'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 5, true)
-            end,
-            ['获得 2 钥匙圈'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 2, true)
             end,
             ['获得 2 点射程'] = function()
                 local p0 = game:GetPlayer(0)
@@ -383,14 +393,6 @@ AscensionMod.NPCOptions = {
                     EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, 0,
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 10, true)
-            end,
-            ['获得 5 随机钥匙'] = function()
-                local p0 = game:GetPlayer(0)
-                scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, 0,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end, 1, 5, true)
             end,
         },
         ['CD2'] = {
@@ -440,8 +442,18 @@ function AscensionMod:NewRunReset()
     scheduler:clear()
     AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
     AscensionMod.playerStats = {
+        speedAdd = 0,
+        speedMul = 1,
+        tearsAdd = 0,
+        tearsMul = 1,
+        dmgAdd = 0,
+        dmgMul = 1,
         rangeAdd = 0,
         rangeMul = 1,
+        shotSpeedAdd = 0,
+        shotSpeedMul = 1,
+        luckAdd = 0,
+        luckMul = 1,
     }
 end
 
@@ -546,50 +558,119 @@ function AscensionMod:SetOptions(NPCID)
         print('Error: No AB options found for NPC ID: '..tostring(NPCID))
         return
     end
-    local optionsABCnt = AscensionMod:GetTableSize(optionsAB)
+    local legitOptionsAB = {}
+    local allLegit = false
+    local predicates
+    if AscensionMod.NPCOptionPredicates[NPCID] == nil then
+        allLegit = true
+    else
+        if AscensionMod.NPCOptionPredicates[NPCID]['AB'] == nil then
+            allLegit = true
+        else
+            predicates = AscensionMod.NPCOptionPredicates[NPCID]['AB']
+        end
+    end
+    for name, _ in pairs(optionsAB) do
+        if allLegit then
+            table.insert(legitOptionsAB, name)
+        elseif predicates[name] == nil then
+            table.insert(legitOptionsAB, name)
+        else
+            if predicates[name]() then
+                table.insert(legitOptionsAB, name)
+            end
+        end
+    end
+    local optionsABCnt = AscensionMod:GetTableSize(legitOptionsAB)
     local optionA = rng:RandomInt(optionsABCnt - 1) + 1
     local optionB = rng:RandomInt(optionsABCnt - 1 - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
     local i = 0
-    for desc, _ in pairs(optionsAB) do
+    for _, desc in ipairs(legitOptionsAB) do
         i = i + 1
         if i == optionA then AscensionMod.options['A'] = desc end
         if i == optionB then AscensionMod.options['B'] = desc end
     end
+
 
     local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
     if optionsCD1 == nil then
         print('Error: No CD1 options found for NPC ID: '..tostring(NPCID))
         return
     end
-    local optionsCD1Cnt = AscensionMod:GetTableSize(optionsCD1)
+    local legitOptionsCD1 = {}
+    allLegit = false
+    if AscensionMod.NPCOptionPredicates[NPCID] == nil then
+        allLegit = true
+    else
+        if AscensionMod.NPCOptionPredicates[NPCID]['CD1'] == nil then
+            allLegit = true
+        else
+            predicates = AscensionMod.NPCOptionPredicates[NPCID]['CD1']
+        end
+    end
+    for name, _ in pairs(optionsCD1) do
+        if allLegit then
+            table.insert(legitOptionsCD1, name)
+        elseif predicates[name] == nil then
+            table.insert(legitOptionsCD1, name)
+        else
+            if predicates[name]() then
+                table.insert(legitOptionsCD1, name)
+            end
+        end
+    end
+    local optionsCD1Cnt = AscensionMod:GetTableSize(legitOptionsCD1)
     local optionC1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
     local optionD1 = rng:RandomInt(optionsCD1Cnt - 1 - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
     i = 0
-    for desc, _ in pairs(optionsCD1) do
+    for _, desc in ipairs(legitOptionsCD1) do
         i = i + 1
         if i == optionC1 then AscensionMod.options['C1'] = desc end
         if i == optionD1 then AscensionMod.options['D1'] = desc end
     end
+
 
     local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
     if optionsCD2 == nil then
         print('Error: No CD2 options found for NPC ID: '..tostring(NPCID))
         return
     end
-    local optionsCD2Cnt = AscensionMod:GetTableSize(optionsCD2)
+    local legitOptionsCD2 = {}
+    allLegit = false
+    if AscensionMod.NPCOptionPredicates[NPCID] == nil then
+        allLegit = true
+    else
+        if AscensionMod.NPCOptionPredicates[NPCID]['CD2'] == nil then
+            allLegit = true
+        else
+            predicates = AscensionMod.NPCOptionPredicates[NPCID]['CD2']
+        end
+    end
+    for name, _ in pairs(optionsCD2) do
+        if allLegit then
+            table.insert(legitOptionsCD2, name)
+        elseif predicates[name] == nil then
+            table.insert(legitOptionsCD2, name)
+        else
+            if predicates[name]() then
+                table.insert(legitOptionsCD2, name)
+            end
+        end
+    end
+    local optionsCD2Cnt = AscensionMod:GetTableSize(legitOptionsCD2)
     local optionC2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
     local optionD2 = rng:RandomInt(optionsCD2Cnt - 1 - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
     i = 0
-    for desc, _ in pairs(optionsCD2) do
+    for _, desc in ipairs(legitOptionsCD2) do
         i = i + 1
         if i == optionC2 then AscensionMod.options['C2'] = desc end
         if i == optionD2 then AscensionMod.options['D2'] = desc end
@@ -987,8 +1068,23 @@ function AscensionMod:OnEvaluateCache(player, cacheFlag)
     if stats == nil then
         return
     end
+    if cacheFlag == CacheFlag.CACHE_SPEED then
+        player.MoveSpeed = (player.MoveSpeed + stats.speedAdd) * stats.speedMul;
+    end
+    if cacheFlag == CacheFlag.CACHE_FIREDELAY then
+        player.MaxFireDelay = (player.MaxFireDelay + stats.tearsAdd) * stats.tearsMul;
+    end
+    if cacheFlag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = (player.Damage + stats.dmgAdd) * stats.dmgMul;
+    end
     if cacheFlag == CacheFlag.CACHE_RANGE then
         player.TearRange = (player.TearRange + stats.rangeAdd * 40) * stats.rangeMul;
+    end
+    if cacheFlag == CacheFlag.CACHE_SHOTSPEED then
+        player.ShotSpeed = (player.ShotSpeed + stats.shotSpeedAdd) * stats.shotSpeedMul;
+    end
+    if cacheFlag == CacheFlag.CACHE_LUCK then
+        player.Luck = (player.Luck + stats.luckAdd) * stats.luckMul;
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, AscensionMod.OnEvaluateCache)
