@@ -124,6 +124,7 @@ AscensionMod:LoadFont()
 AscensionMod.TextColor = {
     ['white'] = KColor(1, 1, 1, 1),
     ['gray'] = KColor(.5, .5, .5, 1),
+    ['light_gray'] = KColor(.7, .7, .7, 1),
 }
 
 
@@ -612,6 +613,11 @@ function AscensionMod:RenderDialogueText()
 end
 
 function AscensionMod:RenderAscensionText()
+    local colorSelected = AscensionMod.TextColor['light_gray']
+    if AscensionMod.controledField == 'ascension' then
+        colorSelected = AscensionMod.TextColor['gray']
+    end
+
     local ascensionLevelDisplay = tostring(AscensionMod.ascensionLevel)
     if ascensionLevelDisplay == 'nil' then
         ascensionLevelDisplay = '0'
@@ -623,7 +629,7 @@ function AscensionMod:RenderAscensionText()
     local text = "进阶: "..ascensionLevelDisplay
     local length = font:GetStringWidth(text)
     local scale = 1
-    local color = AscensionMod.TextColor['white']
+    local color = colorSelected
     font:DrawStringScaled(text,
         x, y,
         scale, scale,
@@ -643,6 +649,10 @@ function AscensionMod:RenderAscensionText()
 end
 
 function AscensionMod:RenderOptionsText()
+    local colorSelected = AscensionMod.TextColor['light_gray']
+    if AscensionMod.controledField == 'option' then
+        colorSelected = AscensionMod.TextColor['gray']
+    end
     local pos = Isaac.WorldToScreen(Vector(320, 260))
     local x = pos.X
     local y = pos.Y
@@ -651,7 +661,7 @@ function AscensionMod:RenderOptionsText()
     local scale = 1
     local color
     if AscensionMod.SelectedOption == 'A' then
-        color = AscensionMod.TextColor['gray']
+        color = colorSelected
     else
         color = AscensionMod.TextColor['white']
     end
@@ -667,7 +677,7 @@ function AscensionMod:RenderOptionsText()
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'B' then
-        color = AscensionMod.TextColor['gray']
+        color = colorSelected
     else
         color = AscensionMod.TextColor['white']
     end
@@ -683,7 +693,7 @@ function AscensionMod:RenderOptionsText()
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'C' then
-        color = AscensionMod.TextColor['gray']
+        color = colorSelected
     else
         color = AscensionMod.TextColor['white']
     end
@@ -699,7 +709,7 @@ function AscensionMod:RenderOptionsText()
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'D' then
-        color = AscensionMod.TextColor['gray']
+        color = colorSelected
     else
         color = AscensionMod.TextColor['white']
     end
@@ -716,7 +726,7 @@ function AscensionMod:RenderExtraInfoText()
     local text = '↑ ↓ 切换选项'
     local length = font:GetStringWidth(text)
     local scale = 1
-    local color = AscensionMod.TextColor['white']
+    local color = AscensionMod.TextColor['light_gray']
     font:DrawStringScaled(text,
         x - length * scale, y,
         scale, scale,
@@ -727,7 +737,7 @@ function AscensionMod:RenderExtraInfoText()
     text = '← → 切换菜单'
     length = font:GetStringWidth(text)
     scale = 1
-    color = AscensionMod.TextColor['white']
+    color = AscensionMod.TextColor['light_gray']
     font:DrawStringScaled(text,
         x - length * scale, y,
         scale, scale,
