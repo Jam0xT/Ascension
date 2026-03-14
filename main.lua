@@ -299,6 +299,9 @@ AscensionMod.NPCOptionsDesc = {
             ['6'] = '获得 1 颗永恒之心',
             ['7'] = '失去 1 颗碎心',
             ['8'] = '获得 2 张神圣卡',
+            ['9'] = '生成 痛悔短祷',
+            ['10'] = '生成 金色 银丝羽毛',
+            ['11'] = '生成 金色 念珠段',
         },
         ['CD2'] = {
             ['1'] = '虚弱',
@@ -374,34 +377,22 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD1'] = {
             ['1'] = function()
-                local p0 = game:GetPlayer(0)
                 scheduler:once(function ()
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1)
                 end, 1)
                 scheduler:once(function ()
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED, 1)
                 end, 2)
                 scheduler:once(function ()
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 1)
                 end, 3)
                 scheduler:once(function ()
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
                 end, 4)
             end,
             ['2'] = function()
-                local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
                 end, 1, 4, true)
             end,
             ['3'] = function ()
@@ -427,15 +418,19 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddBrokenHearts(-1)
             end,
             ['8'] = function ()
-                local p0 = game:GetPlayer(0)
-                for _ = 1, 2 do
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY, 2)
             end,
             ['9'] = function ()
-                
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE,
+                    CollectibleType.COLLECTIBLE_ACT_OF_CONTRITION, 1)
+            end,
+            ['10'] = function ()
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET,
+                    TrinketType.TRINKET_FILIGREE_FEATHERS | TrinketType.TRINKET_GOLDEN_FLAG, 1)
+            end,
+            ['11'] = function ()
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET,
+                    TrinketType.TRINKET_ROSARY_BEAD | TrinketType.TRINKET_GOLDEN_FLAG, 1)
             end,
         },
         ['CD2'] = {
@@ -699,8 +694,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionB >= optionA then
         optionB = optionB + 1
     end
-    AscensionMod.options['A'] = tostring(optionA)
-    AscensionMod.options['B'] = tostring(optionB)
+    AscensionMod.options['A'] = tostring(legitOptionABIDs[optionA])
+    AscensionMod.options['B'] = tostring(legitOptionABIDs[optionB])
 
     local optionCD1Descs = AscensionMod.NPCOptionEvents[NPCID]['CD1']
     if optionCD1Descs == nil then
@@ -735,8 +730,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
-    AscensionMod.options['C1'] = tostring(optionC1)
-    AscensionMod.options['D1'] = tostring(optionD1)
+    AscensionMod.options['C1'] = tostring(legitOptionCD1IDs[optionC1])
+    AscensionMod.options['D1'] = tostring(legitOptionCD1IDs[optionD1])
 
 
     local optionCD2Descs = AscensionMod.NPCOptionEvents[NPCID]['CD2']
@@ -772,8 +767,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
-    AscensionMod.options['C2'] = tostring(optionC2)
-    AscensionMod.options['D2'] = tostring(optionD2)
+    AscensionMod.options['C2'] = tostring(legitOptionsCD2[optionC2])
+    AscensionMod.options['D2'] = tostring(legitOptionsCD2[optionD2])
 end
 
 function AscensionMod:RenderMenu()
