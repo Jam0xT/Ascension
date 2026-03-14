@@ -8,9 +8,9 @@ AscensionMod.SaveManager.Init(AscensionMod)
 local game = Game()
 
 local SHIFT_INDEX = 35
-local seeds = game:GetSeeds()
-local startSeed = seeds:GetStartSeed()
-local rng = RNG(startSeed, SHIFT_INDEX)
+local seeds
+local startSeed
+local rng
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -418,6 +418,9 @@ AscensionMod.NPCOptions = {
 
 
 function AscensionMod:NewRunReset()
+    seeds = game:GetSeeds()
+    startSeed = seeds:GetStartSeed()
+    rng = RNG(startSeed, SHIFT_INDEX)
     scheduler:clear()
     AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
     AscensionMod.playerStats = {
