@@ -684,8 +684,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionB >= optionA then
         optionB = optionB + 1
     end
-    AscensionMod.options['A'] = optionA
-    AscensionMod.options['B'] = optionB
+    AscensionMod.options['A'] = tostring(optionA)
+    AscensionMod.options['B'] = tostring(optionB)
 
     local optionCD1Descs = AscensionMod.NPCOptionEvents[NPCID]['CD1']
     if optionCD1Descs == nil then
@@ -720,8 +720,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
-    AscensionMod.options['C1'] = optionC1
-    AscensionMod.options['D1'] = optionD1
+    AscensionMod.options['C1'] = tostring(optionC1)
+    AscensionMod.options['D1'] = tostring(optionD1)
 
 
     local optionCD2Descs = AscensionMod.NPCOptionEvents[NPCID]['CD2']
@@ -757,8 +757,8 @@ function AscensionMod:SetOptions(NPCID)
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
-    AscensionMod.options['C2'] = optionC2
-    AscensionMod.options['D2'] = optionD2
+    AscensionMod.options['C2'] = tostring(optionC2)
+    AscensionMod.options['D2'] = tostring(optionD2)
 end
 
 function AscensionMod:RenderMenu()
@@ -857,7 +857,7 @@ function AscensionMod:RenderOptionsText()
     local pos = Isaac.WorldToScreen(Vector(320, 260 + yOffset))
     local x = pos.X
     local y = pos.Y
-    local text = tostring(optionDescs[AscensionMod.options['A']])
+    local text = tostring(optionDescs['AB'][AscensionMod.options['A']])
     local length = font:GetStringWidth(text)
     local scale = 1
     local color
@@ -874,7 +874,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 280 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(optionDescs[AscensionMod.options['B']])
+    text = tostring(optionDescs['AB'][AscensionMod.options['B']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'B' then
@@ -890,7 +890,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 300 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(optionDescs[AscensionMod.options['C1']])..' 但是 '..tostring(optionDescs[AscensionMod.options['C2']])
+    text = tostring(optionDescs['CD1'][AscensionMod.options['C1']])..' 但是 '..tostring(optionDescs['CD2'][AscensionMod.options['C2']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'C' then
@@ -906,7 +906,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 320 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(optionDescs[AscensionMod.options['D1']])..' 但是 '..tostring(optionDescs[AscensionMod.options['D2']])
+    text = tostring(optionDescs['CD1'][AscensionMod.options['D1']])..' 但是 '..tostring(optionDescs['CD2'][AscensionMod.options['D2']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'D' then
