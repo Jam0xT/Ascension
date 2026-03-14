@@ -232,16 +232,16 @@ AscensionMod.NPCDialogues = {
 
 AscensionMod.NPCStatues = {
     ['angel'] = { -- [1] for spawn, [2] for remove
-        function ()
-            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200), Vector.Zero, nil)
+        function (yOffset)
+            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.ANGEL, 0, Vector(320, 200 + yOffset), Vector.Zero, nil)
         end,
         function()
             AscensionMod.NPCStatue:Remove()
         end,
     },
     ['devil'] = {
-        function ()
-            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.DEVIL, 0, Vector(320, 200), Vector.Zero, nil)
+        function (yOffset)
+            AscensionMod.NPCStatue = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.DEVIL, 0, Vector(320, 200 + yOffset), Vector.Zero, nil)
         end,
         function()
             AscensionMod.NPCStatue:Remove()
@@ -517,8 +517,13 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+local HUSH_STAGE_Y_OFFSET = 120
 function AscensionMod:SpawnStatue(NPCID)
-    AscensionMod.NPCStatues[NPCID][1]()
+    local yOffset = 0
+    if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
+        yOffset = HUSH_STAGE_Y_OFFSET
+    end
+    AscensionMod.NPCStatues[NPCID][1](yOffset)
 end
 
 function AscensionMod:RemoveStatue(NPCID)
@@ -604,13 +609,20 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderMenu)
 
 function AscensionMod:RenderDialogueText()
-    local pos = Isaac.WorldToScreen(Vector(320, 220))
+    local yOffset = 0
+    if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
+        yOffset = HUSH_STAGE_Y_OFFSET
+    end
+    local pos = Isaac.WorldToScreen(Vector(320, 220 + yOffset))
     local x = pos.X
     local y = pos.Y
     local text = tostring(AscensionMod.dialogue)
     local length = font:GetStringWidth(text)
     local scale = 1.7
     local color = AscensionMod.NPCDialogueColor[AscensionMod.NPCID]
+    if color == nil then
+        color = AscensionMod.TextColor['white']
+    end
     font:DrawStringScaled(text,
         x - length * scale / 2, y,
         scale, scale,
@@ -618,9 +630,16 @@ function AscensionMod:RenderDialogueText()
 end
 
 function AscensionMod:RenderAscensionText()
+    local yOffset = 0
+    if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
+        yOffset = HUSH_STAGE_Y_OFFSET
+    end
     local colorSelected = AscensionMod.TextColor['light_gray']
     if AscensionMod.controledField == 'ascension' then
         colorSelected = AscensionMod.TextColor['gray']
+    end
+    if not AscensionMod:FirstStage() then
+        colorSelected = AscensionMod.TextColor['white']
     end
 
     local ascensionLevelDisplay = tostring(AscensionMod.ascensionLevel)
@@ -628,7 +647,7 @@ function AscensionMod:RenderAscensionText()
         ascensionLevelDisplay = '0'
     end
 
-    local pos = Isaac.WorldToScreen(Vector(80, 360))
+    local pos = Isaac.WorldToScreen(Vector(80, 360 + yOffset))
     local x = pos.X
     local y = pos.Y
     local text = "进阶: "..ascensionLevelDisplay
@@ -640,7 +659,7 @@ function AscensionMod:RenderAscensionText()
         scale, scale,
         color)
 
-    pos = Isaac.WorldToScreen(Vector(80, 380))
+    pos = Isaac.WorldToScreen(Vector(80, 380 + yOffset))
     x = pos.X
     y = pos.Y
     text = tostring(AscensionMod.ascensions[ascensionLevelDisplay])
@@ -654,11 +673,15 @@ function AscensionMod:RenderAscensionText()
 end
 
 function AscensionMod:RenderOptionsText()
+    local yOffset = 0
+    if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
+        yOffset = HUSH_STAGE_Y_OFFSET
+    end
     local colorSelected = AscensionMod.TextColor['light_gray']
     if AscensionMod.controledField == 'option' then
         colorSelected = AscensionMod.TextColor['gray']
     end
-    local pos = Isaac.WorldToScreen(Vector(320, 260))
+    local pos = Isaac.WorldToScreen(Vector(320, 260 + yOffset))
     local x = pos.X
     local y = pos.Y
     local text = tostring(AscensionMod.options['A'])
@@ -675,7 +698,7 @@ function AscensionMod:RenderOptionsText()
         scale, scale,
         color)
 
-    pos = Isaac.WorldToScreen(Vector(320, 280))
+    pos = Isaac.WorldToScreen(Vector(320, 280 + yOffset))
     x = pos.X
     y = pos.Y
     text = tostring(AscensionMod.options['B'])
@@ -691,7 +714,7 @@ function AscensionMod:RenderOptionsText()
         scale, scale,
         color)
 
-    pos = Isaac.WorldToScreen(Vector(320, 300))
+    pos = Isaac.WorldToScreen(Vector(320, 300 + yOffset))
     x = pos.X
     y = pos.Y
     text = tostring(AscensionMod.options['C1'])..' 但是 '..tostring(AscensionMod.options['C2'])
@@ -707,7 +730,7 @@ function AscensionMod:RenderOptionsText()
         scale, scale,
         color)
 
-    pos = Isaac.WorldToScreen(Vector(320, 320))
+    pos = Isaac.WorldToScreen(Vector(320, 320 + yOffset))
     x = pos.X
     y = pos.Y
     text = tostring(AscensionMod.options['D1'])..' 但是 '..tostring(AscensionMod.options['D2'])
@@ -725,7 +748,11 @@ function AscensionMod:RenderOptionsText()
 end
 
 function AscensionMod:RenderExtraInfoText()
-    local pos = Isaac.WorldToScreen(Vector(565, 145))
+    local yOffset = 0
+    if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
+        yOffset = HUSH_STAGE_Y_OFFSET
+    end
+    local pos = Isaac.WorldToScreen(Vector(565, 145 + yOffset))
     local x = pos.X
     local y = pos.Y
     local text = '↑ ↓ 切换选项'
@@ -736,7 +763,12 @@ function AscensionMod:RenderExtraInfoText()
         x - length * scale, y,
         scale, scale,
         color)
-    pos = Isaac.WorldToScreen(Vector(565, 170))
+
+    if not AscensionMod:FirstStage() then
+        return
+    end
+
+    pos = Isaac.WorldToScreen(Vector(565, 170 + yOffset))
     x = pos.X
     y = pos.Y
     text = '← → 切换菜单'
@@ -759,6 +791,9 @@ local actionLeftReleased = true
 local actionRightReleased = true
 function AscensionMod:SwitchControledField(entity, _, _)
     if AscensionMod.isOptionConfirmed then
+        return
+    end
+    if not AscensionMod:FirstStage() then
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
@@ -794,6 +829,10 @@ local actionUpReleased = true
 local actionConfirmReleased = true
 function AscensionMod:SwitchAscensionLevel(entity, _, _)
     if AscensionMod.isOptionConfirmed or AscensionMod.controledField ~= 'ascension' then
+        return
+    end
+    if not AscensionMod:FirstStage() then
+        AscensionMod.controledField = 'option'
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
