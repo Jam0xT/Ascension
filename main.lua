@@ -434,6 +434,9 @@ AscensionMod.NPCOptionEvents = {
                         Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end
             end,
+            ['9'] = function ()
+                
+            end,
         },
         ['CD2'] = {
             ['1'] = function()
@@ -1305,6 +1308,28 @@ function AscensionMod:KeeperOrLost()
         return true
     end
     return false
+end
+
+function AscensionMod:Spawn(eType, eVariant, eSubType, num)
+    if eType == nil then
+        if AscensionMod.debug then print('Error: Cannot spawn entity with type "nil".') end
+        return
+    end
+    if eVariant == nil then
+        eVariant = 0
+    end
+    if eSubType == nil then
+        eSubType = 0
+    end
+    if num == 0 then
+        num = 1
+    end
+    local p0 = game:GetPlayer(0)
+    for _ = 1, num do
+        Isaac.Spawn(
+            eType, eVariant, eSubType,
+            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+    end
 end
 
 
