@@ -279,32 +279,60 @@ AscensionMod.NPCStatues = {
     }
 }
 
+AscensionMod.NPCOptionsDesc = {
+    ['angel'] = {
+        ['AB'] = {
+            ['1'] = '生成 2 钥匙圈',
+            ['2'] = '获得 0.05 移速',
+            ['3'] = '获得 3 射程',
+            ['4'] = '获得 0.5 弹速',
+            ['5'] = '失去 0.3 弹速',
+            ['6'] = '获得 1 幸运',
+            ['7'] = '生成 1 颗魂心',
+        },
+        ['CD1'] = {
+            ['1'] = '获得 钥匙 全家福',
+            ['2'] = '获得 4 金钥匙',
+            ['3'] = '获得 3 幸运',
+            ['4'] = '获得 0.15 移速',
+            ['5'] = '获得 1 颗心最大生命',
+            ['6'] = '获得 1 颗永恒之心',
+            ['7'] = '失去 1 颗碎心',
+            ['8'] = '获得 2 张神圣卡',
+        },
+        ['CD2'] = {
+            ['1'] = '虚弱',
+            ['2'] = '萎靡',
+        }
+    }
+}
+
 AscensionMod.NPCOptionPredicates = {
     ['angel'] = {
         ['AB'] = {
-            ['生成 1 颗魂心'] = function ()
+            ['7'] = function ()
                 return not AscensionMod:KeeperOrLost()
             end,
         },
         ['CD1'] = {
-            ['获得 1 最大生命'] = function ()
+            ['5'] = function ()
                 return not AscensionMod:KeeperOrLost()
             end,
-            ['失去 1 颗碎心'] = function ()
+            ['6'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+            ['7'] = function ()
                 local p0 = game:GetPlayer(0)
                 return (p0:GetBrokenHearts() >= 1)
-            end,
-            ['获得 1 颗永恒之心'] = function ()
-                return not AscensionMod:KeeperOrLost()
             end,
         }
     }
 }
 
-AscensionMod.NPCOptions = {
+AscensionMod.NPCOptionEvents = {
     ['angel'] = {
         ['AB'] = {
-            ['生成 2 钥匙圈'] = function()
+            ['1'] = function()
                 local p0 = game:GetPlayer(0)
                 for _ = 1, 2 do
                     Isaac.Spawn(
@@ -312,32 +340,32 @@ AscensionMod.NPCOptions = {
                         Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end
             end,
-            ['获得 0.05 移速'] = function ()
+            ['2'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.05
                 p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
             end,
-            ['获得 3 射程'] = function ()
+            ['3'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 3
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
-            ['获得 0.5 弹速'] = function ()
+            ['4'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd + 0.5
                 p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
             end,
-            ['失去 0.3 弹速'] = function ()
+            ['5'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd - 0.3
                 p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
             end,
-            ['获得 1 幸运'] = function ()
+            ['6'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 1
                 p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
             end,
-            ['生成 1 颗魂心'] = function ()
+            ['7'] = function ()
                 local p0 = game:GetPlayer(0)
                 Isaac.Spawn(
                     EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, HeartSubType.HEART_SOUL,
@@ -345,7 +373,7 @@ AscensionMod.NPCOptions = {
             end,
         },
         ['CD1'] = {
-            ['获得 钥匙 全家福'] = function()
+            ['1'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:once(function ()
                     Isaac.Spawn(
@@ -368,7 +396,7 @@ AscensionMod.NPCOptions = {
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 4)
             end,
-            ['获得 4 金钥匙'] = function()
+            ['2'] = function()
                 local p0 = game:GetPlayer(0)
                 scheduler:seq_n(function ()
                     Isaac.Spawn(
@@ -376,29 +404,29 @@ AscensionMod.NPCOptions = {
                     Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
                 end, 1, 4, true)
             end,
-            ['获得 3 幸运'] = function ()
+            ['3'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 3
                 p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
             end,
-            ['获得 0.15 移速'] = function ()
+            ['4'] = function ()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.15
                 p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
             end,
-            ['获得 1 颗心最大生命'] = function ()
+            ['5'] = function ()
                 local p0 = game:GetPlayer(0)
                 p0:AddMaxHearts(2, true)
             end,
-            ['获得 1 颗永恒之心'] = function ()
+            ['6'] = function ()
                 local p0 = game:GetPlayer(0)
                 p0:AddEternalHearts(1)
             end,
-            ['失去 1 颗碎心'] = function ()
+            ['7'] = function ()
                 local p0 = game:GetPlayer(0)
                 p0:AddBrokenHearts(-1)
             end,
-            ['获得 2 张神圣卡'] = function ()
+            ['8'] = function ()
                 local p0 = game:GetPlayer(0)
                 for _ = 1, 2 do
                     Isaac.Spawn(
@@ -408,14 +436,14 @@ AscensionMod.NPCOptions = {
             end,
         },
         ['CD2'] = {
-            ['虚弱'] = function()
+            ['1'] = function()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.4
                 p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
                 AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd - 0.2
                 p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
             end,
-            ['萎靡'] = function()
+            ['2'] = function()
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - 0.7
                 p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
@@ -622,12 +650,12 @@ AscensionMod.options = {}
 function AscensionMod:SetOptions(NPCID)
     if NPCID == nil then print('Error: NPC ID is nil while trying to set options.') return end
 
-    local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
-    if optionsAB == nil then
-        print('Error: No AB options found for NPC ID: '..tostring(NPCID))
+    local optionABDescs = AscensionMod.NPCOptionEvents[NPCID]['AB']
+    if optionABDescs == nil then
+        print('Error: No AB option descriptions found for NPC ID: '..tostring(NPCID))
         return
     end
-    local legitOptionsAB = {}
+    local legitOptionABIDs = {}
     local allLegit = false
     local predicates
     if AscensionMod.NPCOptionPredicates[NPCID] == nil then
@@ -639,37 +667,32 @@ function AscensionMod:SetOptions(NPCID)
             predicates = AscensionMod.NPCOptionPredicates[NPCID]['AB']
         end
     end
-    for name, _ in pairs(optionsAB) do
+    for optionID, _ in pairs(optionABDescs) do
         if allLegit then
-            table.insert(legitOptionsAB, name)
-        elseif predicates[name] == nil then
-            table.insert(legitOptionsAB, name)
+            table.insert(legitOptionABIDs, optionID)
+        elseif predicates[optionID] == nil then
+            table.insert(legitOptionABIDs, optionID)
         else
-            if predicates[name]() then
-                table.insert(legitOptionsAB, name)
+            if predicates[optionID]() then
+                table.insert(legitOptionABIDs, optionID)
             end
         end
     end
-    local optionsABCnt = AscensionMod:GetTableSize(legitOptionsAB)
+    local optionsABCnt = #legitOptionABIDs
     local optionA = rng:RandomInt(optionsABCnt - 1) + 1
     local optionB = rng:RandomInt(optionsABCnt - 1 - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
-    local i = 0
-    for _, desc in ipairs(legitOptionsAB) do
-        i = i + 1
-        if i == optionA then AscensionMod.options['A'] = desc end
-        if i == optionB then AscensionMod.options['B'] = desc end
-    end
+    AscensionMod.options['A'] = optionA
+    AscensionMod.options['B'] = optionB
 
-
-    local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
-    if optionsCD1 == nil then
+    local optionCD1Descs = AscensionMod.NPCOptionEvents[NPCID]['CD1']
+    if optionCD1Descs == nil then
         print('Error: No CD1 options found for NPC ID: '..tostring(NPCID))
         return
     end
-    local legitOptionsCD1 = {}
+    local legitOptionCD1IDs = {}
     allLegit = false
     if AscensionMod.NPCOptionPredicates[NPCID] == nil then
         allLegit = true
@@ -680,33 +703,29 @@ function AscensionMod:SetOptions(NPCID)
             predicates = AscensionMod.NPCOptionPredicates[NPCID]['CD1']
         end
     end
-    for name, _ in pairs(optionsCD1) do
+    for optionID, _ in pairs(optionCD1Descs) do
         if allLegit then
-            table.insert(legitOptionsCD1, name)
-        elseif predicates[name] == nil then
-            table.insert(legitOptionsCD1, name)
+            table.insert(legitOptionCD1IDs, optionID)
+        elseif predicates[optionID] == nil then
+            table.insert(legitOptionCD1IDs, optionID)
         else
-            if predicates[name]() then
-                table.insert(legitOptionsCD1, name)
+            if predicates[optionID]() then
+                table.insert(legitOptionCD1IDs, optionID)
             end
         end
     end
-    local optionsCD1Cnt = AscensionMod:GetTableSize(legitOptionsCD1)
+    local optionsCD1Cnt = #legitOptionCD1IDs
     local optionC1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
     local optionD1 = rng:RandomInt(optionsCD1Cnt - 1 - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
-    i = 0
-    for _, desc in ipairs(legitOptionsCD1) do
-        i = i + 1
-        if i == optionC1 then AscensionMod.options['C1'] = desc end
-        if i == optionD1 then AscensionMod.options['D1'] = desc end
-    end
+    AscensionMod.options['C1'] = optionC1
+    AscensionMod.options['D1'] = optionD1
 
 
-    local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
-    if optionsCD2 == nil then
+    local optionCD2Descs = AscensionMod.NPCOptionEvents[NPCID]['CD2']
+    if optionCD2Descs == nil then
         print('Error: No CD2 options found for NPC ID: '..tostring(NPCID))
         return
     end
@@ -721,29 +740,25 @@ function AscensionMod:SetOptions(NPCID)
             predicates = AscensionMod.NPCOptionPredicates[NPCID]['CD2']
         end
     end
-    for name, _ in pairs(optionsCD2) do
+    for optionID, _ in pairs(optionCD2Descs) do
         if allLegit then
-            table.insert(legitOptionsCD2, name)
-        elseif predicates[name] == nil then
-            table.insert(legitOptionsCD2, name)
+            table.insert(legitOptionsCD2, optionID)
+        elseif predicates[optionID] == nil then
+            table.insert(legitOptionsCD2, optionID)
         else
-            if predicates[name]() then
-                table.insert(legitOptionsCD2, name)
+            if predicates[optionID]() then
+                table.insert(legitOptionsCD2, optionID)
             end
         end
     end
-    local optionsCD2Cnt = AscensionMod:GetTableSize(legitOptionsCD2)
+    local optionsCD2Cnt = #legitOptionsCD2
     local optionC2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
     local optionD2 = rng:RandomInt(optionsCD2Cnt - 1 - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
-    i = 0
-    for _, desc in ipairs(legitOptionsCD2) do
-        i = i + 1
-        if i == optionC2 then AscensionMod.options['C2'] = desc end
-        if i == optionD2 then AscensionMod.options['D2'] = desc end
-    end
+    AscensionMod.options['C2'] = optionC2
+    AscensionMod.options['D2'] = optionD2
 end
 
 function AscensionMod:RenderMenu()
@@ -827,6 +842,14 @@ function AscensionMod:RenderOptionsText()
     if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
         yOffset = HUSH_STAGE_Y_OFFSET
     end
+
+    local NPCID = AscensionMod.NPCID
+    local optionDescs = AscensionMod.NPCOptionsDesc[NPCID]
+    if optionDescs == nil then
+        print('Error: No option descriptions found for NPC: '..tostring(NPCID))
+        return
+    end
+
     local colorSelected = AscensionMod.TextColor['light_gray']
     if AscensionMod.controledField == 'option' then
         colorSelected = AscensionMod.TextColor['gray']
@@ -834,7 +857,7 @@ function AscensionMod:RenderOptionsText()
     local pos = Isaac.WorldToScreen(Vector(320, 260 + yOffset))
     local x = pos.X
     local y = pos.Y
-    local text = tostring(AscensionMod.options['A'])
+    local text = tostring(optionDescs[AscensionMod.options['A']])
     local length = font:GetStringWidth(text)
     local scale = 1
     local color
@@ -851,7 +874,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 280 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(AscensionMod.options['B'])
+    text = tostring(optionDescs[AscensionMod.options['B']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'B' then
@@ -867,7 +890,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 300 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(AscensionMod.options['C1'])..' 但是 '..tostring(AscensionMod.options['C2'])
+    text = tostring(optionDescs[AscensionMod.options['C1']])..' 但是 '..tostring(optionDescs[AscensionMod.options['C2']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'C' then
@@ -883,7 +906,7 @@ function AscensionMod:RenderOptionsText()
     pos = Isaac.WorldToScreen(Vector(320, 320 + yOffset))
     x = pos.X
     y = pos.Y
-    text = tostring(AscensionMod.options['D1'])..' 但是 '..tostring(AscensionMod.options['D2'])
+    text = tostring(optionDescs[AscensionMod.options['D1']])..' 但是 '..tostring(optionDescs[AscensionMod.options['D2']])
     length = font:GetStringWidth(text)
     scale = 1
     if AscensionMod.SelectedOption == 'D' then
@@ -1092,23 +1115,26 @@ function AscensionMod:ConfirmSeletedOption()
         local option = AscensionMod.SelectedOption;
 
         local NPCID = AscensionMod.NPCID
-        local optionsAB = AscensionMod.NPCOptions[NPCID]['AB']
-        local optionsCD1 = AscensionMod.NPCOptions[NPCID]['CD1']
-        local optionsCD2 = AscensionMod.NPCOptions[NPCID]['CD2']
-        local key
-        local eventFn
-        if option == 'A' or option == 'B' then
-            key = AscensionMod.options[option]
-            eventFn = optionsAB[key]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
-        else
-            key = AscensionMod.options[tostring(option)..'1']
-            eventFn = optionsCD1[key]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
 
-            key = AscensionMod.options[tostring(option)..'2']
-            eventFn = optionsCD2[key]
-            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(key)) end
+        local optionABEvents = AscensionMod.NPCOptionEvents[NPCID]['AB']
+        local optionCD1Events = AscensionMod.NPCOptionEvents[NPCID]['CD1']
+        local optionCD2Events = AscensionMod.NPCOptionEvents[NPCID]['CD2']
+
+        local optionID
+        local eventFn
+
+        if option == 'A' or option == 'B' then
+            optionID = AscensionMod.options[option]
+            eventFn = optionABEvents[optionID]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
+        else
+            optionID = AscensionMod.options[tostring(option)..'1']
+            eventFn = optionCD1Events[optionID]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
+
+            optionID = AscensionMod.options[tostring(option)..'2']
+            eventFn = optionCD2Events[optionID]
+            if eventFn ~= nil then eventFn() else print('Error: No event function found for: '..tostring(optionID)) end
         end
 
         AscensionMod:ShowPlayer()
