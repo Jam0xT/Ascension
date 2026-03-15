@@ -20,6 +20,39 @@ local statsID = {
     LUCK = 6
 }
 
+-- https://gist.github.com/efrederickson/4080372
+local RomanNumerals = { }
+
+RomanNumerals.numbers = { 1, 5, 10, 50, 100, 500, 1000 }
+RomanNumerals.chars = { "I", "V", "X", "L", "C", "D", "M" }
+
+function RomanNumerals.ToRomanNumerals(s)
+    --s = tostring(s)
+    s = tonumber(s)
+    if not s or s ~= s then error"Unable to convert to number" end
+    if s == math.huge then error"Unable to convert infinity" end
+    s = math.floor(s)
+    if s <= 0 then return s end
+	local ret = ""
+        for i = #RomanNumerals.numbers, 1, -1 do
+        local num = RomanNumerals.numbers[i]
+        while s - num >= 0 and s > 0 do
+            ret = ret .. RomanNumerals.chars[i]
+            s = s - num
+        end
+        --for j = i - 1, 1, -1 do
+        for j = 1, i - 1 do
+            local n2 = RomanNumerals.numbers[j]
+            if s - (num - n2) >= 0 and s < num and s > 0 and num - n2 ~= n2 then
+                ret = ret .. RomanNumerals.chars[j] .. RomanNumerals.chars[i]
+                s = s - (num - n2)
+                break
+            end
+        end
+    end
+    return ret
+end
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------- 延时触发辅助工具 ---------------------------------------------------------------------
@@ -1154,7 +1187,7 @@ function AscensionMod:RenderStatus()
         return
     end
     local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 40)
-    local Y_STEP = 20
+    local Y_STEP = 15
 
     local x = bottomRight.X
     local y = bottomRight.Y
@@ -1164,7 +1197,11 @@ function AscensionMod:RenderStatus()
     local color
     for statusID, num in pairs(AscensionMod.Angel.status) do
         if num > 0 then
-            text = AscensionMod.statusDisplay[statusID].t..' '..tostring(num)
+            if num <= 20 then
+                text = AscensionMod.statusDisplay[statusID].t..' '..RomanNumerals.ToRomanNumerals(num)
+            else
+                text = AscensionMod.statusDisplay[statusID].t..' '..tostring(num)
+            end
             color = AscensionMod.statusDisplay[statusID].c
             length = font:GetStringWidth(text)
             scale = 1
@@ -1654,6 +1691,9 @@ function AscensionMod.Angel:Reset()
 end
 
 function AscensionMod.Angel:Discipline()
+    if not AscensionMod.Angel.status then
+        return
+    end
     if AscensionMod.Angel.status.discipline < 1 then
         return
     end
