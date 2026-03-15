@@ -436,16 +436,13 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.3 + 0.05 * AscensionMod.stageCnt)
-                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
-                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd - (0.2 + 0.03 * AscensionMod.stageCnt)
-                p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
+                local n = AscensionMod.stageCnt
+                AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n))
+                AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n))
             end,
             ['2'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.5 + 0.1 * AscensionMod.stageCnt)
-                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+                local n = AscensionMod.stageCnt
+                AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n))
             end,
             ['3'] = function ()
                 AscensionMod.Angel.discipline = true
