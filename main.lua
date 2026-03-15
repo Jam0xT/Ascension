@@ -1150,6 +1150,9 @@ AscensionMod.statusDisplay = {
     },
 }
 function AscensionMod:RenderStatus()
+    if not AscensionMod.Angel.status then
+        return
+    end
     local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 40)
     local Y_STEP = 20
 
