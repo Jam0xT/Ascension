@@ -790,8 +790,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsABCnt = #legitOptionABIDs
-    local optionA = rng:RandomInt(optionsABCnt - 1) + 1
-    local optionB = rng:RandomInt(optionsABCnt - 1 - 1) + 1
+    local optionA = rng:RandomInt(optionsABCnt) + 1
+    local optionB = rng:RandomInt(optionsABCnt - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
@@ -826,14 +826,13 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD1Cnt = #legitOptionCD1IDs
-    local optionC1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
-    local optionD1 = rng:RandomInt(optionsCD1Cnt - 1 - 1) + 1
+    local optionC1 = rng:RandomInt(optionsCD1Cnt) + 1
+    local optionD1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
     AscensionMod.options['C1'] = tostring(legitOptionCD1IDs[optionC1])
     AscensionMod.options['D1'] = tostring(legitOptionCD1IDs[optionD1])
-
 
     local optionCD2Descs = AscensionMod.NPCOptionEvents[NPCID]['CD2']
     if optionCD2Descs == nil then
@@ -863,8 +862,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD2Cnt = #legitOptionsCD2
-    local optionC2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
-    local optionD2 = rng:RandomInt(optionsCD2Cnt - 1 - 1) + 1
+    local optionC2 = rng:RandomInt(optionsCD2Cnt) + 1
+    local optionD2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
