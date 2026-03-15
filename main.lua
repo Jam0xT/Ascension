@@ -438,13 +438,17 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod.Angel.blessing = AscensionMod.Angel.blessing + 1
             end,
             ['13'] = function ()
+                AscensionMod.Angel.luck = AscensionMod.Angel.luck + 1
+                local x = AscensionMod.Angel.luck - 1
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * 1.2
+                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 + 0.2 - math.min(x, 3) * 0.05)
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
             ['14'] = function ()
+                AscensionMod.Angel.range = AscensionMod.Angel.range + 1
+                local x = AscensionMod.Angel.range - 1
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 1.3
+                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * (1 + 0.3 - math.min(x, 2) * 0.1)
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
             ['15'] = function ()
@@ -453,16 +457,20 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
+                AscensionMod.Angel.malaise = AscensionMod.Angel.malaise + 1
+                local x = AscensionMod.Angel.malaise - 1
                 local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n))
-                AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n))
+                AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
+                AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
             end,
             ['2'] = function ()
+                AscensionMod.Angel.weakness = AscensionMod.Angel.weakness + 1
+                local x = AscensionMod.Angel.weakness
                 local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n))
+                AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
             end,
             ['3'] = function ()
-                AscensionMod.Angel.discipline = true
+                AscensionMod.Angel.discipline = AscensionMod.Angel.discipline + 1
             end
         }
     },
@@ -1577,13 +1585,13 @@ function AscensionMod.Angel:Reset()
 end
 
 function AscensionMod.Angel:Discipline()
-    if AscensionMod.Angel.discipline == 0 then
+    if AscensionMod.Angel.discipline < 1 then
         return
     end
     local room = game:GetRoom()
     if room:GetType() == RoomType.ROOM_DEVIL then
         local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7)
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7 + 0.5 * (AscensionMod.Angel.discipline - 1))
         p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
     end
 end
