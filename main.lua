@@ -435,18 +435,18 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SwallowTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
             end,
             ['12'] = function ()
-                AscensionMod.Angel.blessing = AscensionMod.Angel.blessing + 1
+                AscensionMod.Angel.status.blessing = AscensionMod.Angel.status.blessing + 1
             end,
             ['13'] = function ()
-                AscensionMod.Angel.luck = AscensionMod.Angel.luck + 1
-                local x = AscensionMod.Angel.luck - 1
+                AscensionMod.Angel.status.luck = AscensionMod.Angel.status.luck + 1
+                local x = AscensionMod.Angel.status.luck - 1
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 + 0.2 - math.min(x, 3) * 0.05)
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
             end,
             ['14'] = function ()
-                AscensionMod.Angel.range = AscensionMod.Angel.range + 1
-                local x = AscensionMod.Angel.range - 1
+                AscensionMod.Angel.status.range = AscensionMod.Angel.status.range + 1
+                local x = AscensionMod.Angel.status.range - 1
                 local p0 = game:GetPlayer(0)
                 AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * (1 + 0.3 - math.min(x, 2) * 0.1)
                 p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
@@ -457,20 +457,20 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
-                AscensionMod.Angel.malaise = AscensionMod.Angel.malaise + 1
-                local x = AscensionMod.Angel.malaise - 1
+                AscensionMod.Angel.status.malaise = AscensionMod.Angel.status.malaise + 1
+                local x = AscensionMod.Angel.status.malaise - 1
                 local n = AscensionMod.stageCnt
                 AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
                 AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
             end,
             ['2'] = function ()
-                AscensionMod.Angel.weakness = AscensionMod.Angel.weakness + 1
-                local x = AscensionMod.Angel.weakness
+                AscensionMod.Angel.status.weakness = AscensionMod.Angel.status.weakness + 1
+                local x = AscensionMod.Angel.status.weakness
                 local n = AscensionMod.stageCnt
                 AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
             end,
             ['3'] = function ()
-                AscensionMod.Angel.discipline = AscensionMod.Angel.discipline + 1
+                AscensionMod.Angel.status.discipline = AscensionMod.Angel.status.discipline + 1
             end
         }
     },
@@ -799,7 +799,7 @@ end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------- 抽取 / 显示进层选项 ------------------------------------------------------------------
+---------------------------------------------------------------- 抽取进层选项 -------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -917,6 +917,12 @@ function AscensionMod:SetOptions(NPCID)
     AscensionMod.options['C2'] = tostring(legitOptionsCD2[optionC2])
     AscensionMod.options['D2'] = tostring(legitOptionsCD2[optionD2])
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 渲染进层选项 -------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 function AscensionMod:RenderMenu()
     if AscensionMod.isOptionConfirmed then
@@ -1110,6 +1116,64 @@ function AscensionMod:RenderExtraInfoText()
         scale, scale,
         color)
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------ 渲染状态 ---------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.statusDisplay = {
+    malaise = {
+        c = KColor(1, 1, 1, 1), -- color
+        t = '萎靡' -- text
+    },
+    weakness = {
+        c = KColor(1, 1, 1, 1),
+        t = '虚弱'
+    },
+    discipline = {
+        c = KColor(1, 1, 1, 1),
+        t = '惩戒'
+    },
+    blessing = {
+        c = KColor(1, 1, 1, 1),
+        t = '祝福'
+    },
+    luck = {
+        c = KColor(1, 1, 1, 1),
+        t = '幸运'
+    },
+    range = {
+        c = KColor(1, 1, 1, 1),
+        t = '远见'
+    },
+}
+function AscensionMod:RenderStatus()
+    local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 40)
+    local Y_STEP = 20
+
+    local x = bottomRight.X
+    local y = bottomRight.Y
+    local text
+    local length
+    local scale
+    local color
+    for statusID, num in pairs(AscensionMod.Angel.status) do
+        if num > 0 then
+            text = AscensionMod.statusDisplay[statusID].t..' '..tostring(num)
+            color = AscensionMod.statusDisplay[statusID].c
+            length = font:GetStringWidth(text)
+            scale = 1
+            font:DrawStringScaled(text,
+                x - length * scale, y,
+                scale, scale,
+                color)
+            y = y - Y_STEP
+        end
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_RENDER, AscensionMod.RenderStatus)
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1576,22 +1640,24 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.Loo
 
 AscensionMod.Angel = {}
 function AscensionMod.Angel:Reset()
-    AscensionMod.Angel.malaise = 0
-    AscensionMod.Angel.weakness = 0
-    AscensionMod.Angel.discipline = 0
-    AscensionMod.Angel.blessing = 0
-    AscensionMod.Angel.luck = 0
-    AscensionMod.Angel.range = 0
+    AscensionMod.Angel.status = {
+        malaise = 0,
+        weakness = 0,
+        discipline = 0,
+        blessing = 0,
+        luck = 0,
+        range = 0,
+    }
 end
 
 function AscensionMod.Angel:Discipline()
-    if AscensionMod.Angel.discipline < 1 then
+    if AscensionMod.Angel.status.discipline < 1 then
         return
     end
     local room = game:GetRoom()
     if room:GetType() == RoomType.ROOM_DEVIL then
         local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7 + 0.5 * (AscensionMod.Angel.discipline - 1))
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7 + 0.5 * (AscensionMod.Angel.status.discipline - 1))
         p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
     end
 end
