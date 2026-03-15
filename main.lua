@@ -309,17 +309,17 @@ AscensionMod.NPCOptionsDesc = {
             ['7'] = '失去 1 颗碎心',
             ['8'] = '获得 2 张神圣卡',
             ['9'] = '生成 痛悔短祷',
-            ['10'] = '生成 金色 银丝羽毛',
-            ['11'] = '生成 金色 念珠段',
-            ['12'] = '获得 祝福', -- todo 大教堂 buff
-            ['13'] = '获得 幸运', -- todo 幸运倍率
-            ['14'] = '获得 远见', -- todo 射程倍率
-            ['15'] = '生成 1 张教皇卡' -- todo
+            ['10'] = '获得 金色 银丝羽毛',
+            ['11'] = '获得 金色 念珠段',
+            ['12'] = '获得 1 层祝福', -- todo 大教堂 buff
+            ['13'] = '获得 1 层幸运',
+            ['14'] = '获得 1 层远见',
+            ['15'] = '生成 1 张教皇卡'
         },
         ['CD2'] = {
-            ['1'] = '获得 虚弱',
-            ['2'] = '获得 萎靡',
-            ['3'] = '获得 惩戒',
+            ['1'] = '获得 1 层萎靡',
+            ['2'] = '获得 1 层虚弱',
+            ['3'] = '获得 1 层惩戒',
         }
     },
     ['devil'] = {
@@ -339,21 +339,20 @@ AscensionMod.NPCOptionsDesc = {
             ['2'] = '生成 7 随机炸弹',
             ['3'] = '生成 金色 恶魔王冠',
             ['4'] = '生成 彼列之书',
-            ['5'] = '获得 力量',
-            ['6'] = '获得 腐化',
+            ['5'] = '获得 1 层力量',
+            ['6'] = '获得 1 层腐化',
             ['7'] = '生成 5 张恶魔卡',
             ['8'] = '生成 3 张力量卡',
             ['9'] = '生成 2 张倒位力量卡',
         },
         ['CD2'] = {
-            ['1'] = '获得 1 个随机诅咒', -- 随机新诅咒
+            ['1'] = '获得 黑暗诅咒 和 致盲诅咒',
             ['2'] = '获得 1 颗碎心',
-            ['3'] = '失去所有 钥匙',
-            ['4'] = '获得 不幸', -- 幸运负倍率
-            ['5'] = '获得 灾厄', -- 随机超级陆夫人
-            ['6'] = '使用 失忆症 大胶囊',
-            ['7'] = '失去 三分之二 射程', -- 不改变倍率
-            ['8'] = '失去 2 颗心最大生命',
+            ['3'] = '失去所有 钥匙 和 金币',
+            ['4'] = '获得 1 层不幸',
+            ['5'] = '获得 1 层灾厄', -- 随机超级陆夫人
+            ['6'] = '失去 三分之二 射程',
+            ['7'] = '失去 2 颗心最大生命',
         }
     }
 }
@@ -430,11 +429,27 @@ AscensionMod.NPCOptionEvents = {
                     CollectibleType.COLLECTIBLE_ACT_OF_CONTRITION, 1, 0)
             end,
             ['10'] = function ()
-                AscensionMod:SpawnTrinket(TrinketType.TRINKET_FILIGREE_FEATHERS, true)
+                AscensionMod:SwallowTrinket(TrinketType.TRINKET_FILIGREE_FEATHERS, true)
             end,
             ['11'] = function ()
-                AscensionMod:SpawnTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
+                AscensionMod:SwallowTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
             end,
+            ['12'] = function ()
+                AscensionMod.Angel.blessing = AscensionMod.Angel.blessing + 1
+            end,
+            ['13'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * 1.2
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+            ['14'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 1.3
+                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+            end,
+            ['15'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_HIEROPHANT, 1, 0)
+            end
         },
         ['CD2'] = {
             ['1'] = function ()
@@ -515,20 +530,34 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
+                local level = game:GetLevel()
+                level:AddCurse(LevelCurse.CURSE_OF_DARKNESS, true)
+                level:AddCurse(LevelCurse.CURSE_OF_BLIND, true)
             end,
             ['2'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddBrokenHearts(1)
             end,
             ['3'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddKeys(-99)
+                p0:AddCoins(-999)
             end,
             ['4'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * 0.8
+                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
             end,
             ['5'] = function ()
+                -- tbd
             end,
             ['6'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod:AddStats(statsID.RANGE, -(p0.TearRange / 40) / 3 * 2)
             end,
             ['7'] = function ()
-            end,
-            ['8'] = function ()
+                local p0 = game:GetPlayer(0)
+                p0:AddMaxHearts(-4, true)
             end,
         }
     },
@@ -616,6 +645,16 @@ AscensionMod.NPCOptionPredicates = {
         }
     },
     ['devil'] = {
+        ['CD2'] = {
+            ['3'] = function ()
+                local p0 = game:GetPlayer(0)
+                return (p0:GetNumKeys() >= 2 and p0:GetNumCoins() >= 20)
+            end,
+            ['8'] = function ()
+                local p0 = game:GetPlayer(0)
+                return (not AscensionMod:KeeperOrLost()) and (p0:GetMaxHearts() >= 4)
+            end
+        }
     }
 }
 
@@ -1529,11 +1568,16 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.Loo
 
 AscensionMod.Angel = {}
 function AscensionMod.Angel:Reset()
-    AscensionMod.Angel.discipline = false
+    AscensionMod.Angel.malaise = 0
+    AscensionMod.Angel.weakness = 0
+    AscensionMod.Angel.discipline = 0
+    AscensionMod.Angel.blessing = 0
+    AscensionMod.Angel.luck = 0
+    AscensionMod.Angel.range = 0
 end
 
 function AscensionMod.Angel:Discipline()
-    if not AscensionMod.Angel.discipline then
+    if AscensionMod.Angel.discipline == 0 then
         return
     end
     local room = game:GetRoom()
