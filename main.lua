@@ -339,9 +339,11 @@ AscensionMod.NPCOptionsDesc = {
             ['2'] = '生成 7 随机炸弹',
             ['3'] = '生成 金色 恶魔王冠',
             ['4'] = '生成 彼列之书',
-            ['5'] = '获得 力量', -- 成长形攻击力
-            ['6'] = '获得 腐化', -- 金色恶魔尾巴 黑心 
+            ['5'] = '获得 力量',
+            ['6'] = '获得 腐化',
             ['7'] = '生成 5 张恶魔卡',
+            ['8'] = '生成 3 张力量卡',
+            ['9'] = '生成 2 张倒位力量卡',
         },
         ['CD2'] = {
             ['1'] = '获得 1 个随机诅咒', -- 随机新诅咒
@@ -461,14 +463,10 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, 0, 5, 1)
             end,
             ['4'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd + 0.4
-                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+                AscensionMod:AddStats(statsID.DMG, 0.4)
             end,
             ['5'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd + 0.3
-                p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
+                AscensionMod:AddStats(statsID.TEARS, 0.3)
             end,
             ['6'] = function ()
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_TROLL, 10, 1)
@@ -484,8 +482,54 @@ AscensionMod.NPCOptionEvents = {
             end,
         },
         ['CD1'] = {
+            ['1'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, 0, 15, 1)
+            end,
+            ['2'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, 0, 7, 1)
+            end,
+            ['3'] = function ()
+                AscensionMod:SpawnTrinket(TrinketType.TRINKET_DEVILS_CROWN, true)
+            end,
+            ['4'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COLLECTIBLE, CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL, 1, 0)
+            end,
+            ['5'] = function ()
+                local n = AscensionMod.stageCnt
+                AscensionMod:AddStats(statsID.DMG, 1.15 ^ n)
+            end,
+            ['6'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
+                AscensionMod:SwallowTrinket(TrinketType.TRINKET_DAEMONS_TAIL, true)
+                AscensionMod:SwallowTrinket(TrinketType.TRINKET_BLACK_FEATHER, true)
+            end,
+            ['7'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_DEVIL, 5, 2)
+            end,
+            ['8'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_STRENGTH, 3, 2)
+            end,
+            ['9'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_REVERSE_STRENGTH, 2, 0)
+            end,
         },
         ['CD2'] = {
+            ['1'] = function ()
+            end,
+            ['2'] = function ()
+            end,
+            ['3'] = function ()
+            end,
+            ['4'] = function ()
+            end,
+            ['5'] = function ()
+            end,
+            ['6'] = function ()
+            end,
+            ['7'] = function ()
+            end,
+            ['8'] = function ()
+            end,
         }
     },
     ['placeholder'] = {
