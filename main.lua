@@ -11,6 +11,14 @@ local SHIFT_INDEX = 35
 local seeds
 local startSeed
 local rng
+local statsID = {
+    SPEED = 1,
+    TEARS = 2,
+    DMG = 3,
+    RANGE = 4,
+    SHOTSPEED = 5,
+    LUCK = 6
+}
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,10 +297,11 @@ AscensionMod.NPCOptionsDesc = {
             ['5'] = '失去 0.3 弹速',
             ['6'] = '获得 1 幸运',
             ['7'] = '生成 1 颗魂心',
+            ['8'] = '生成 1 张倒位恶魔'
         },
         ['CD1'] = {
-            ['1'] = '获得 钥匙 全家福',
-            ['2'] = '获得 4 金钥匙',
+            ['1'] = '生成 钥匙 全家福',
+            ['2'] = '生成 4 金钥匙',
             ['3'] = '获得 3 幸运',
             ['4'] = '获得 0.15 移速',
             ['5'] = '获得 1 颗心最大生命',
@@ -302,33 +311,47 @@ AscensionMod.NPCOptionsDesc = {
             ['9'] = '生成 痛悔短祷',
             ['10'] = '生成 金色 银丝羽毛',
             ['11'] = '生成 金色 念珠段',
+            ['12'] = '获得 祝福', -- todo 大教堂 buff
+            ['13'] = '获得 幸运', -- todo 幸运倍率
+            ['14'] = '获得 远见', -- todo 射程倍率
+            ['15'] = '生成 1 张教皇卡' -- todo
         },
         ['CD2'] = {
-            ['1'] = '虚弱',
-            ['2'] = '萎靡',
-            ['3'] = '惩戒',
+            ['1'] = '获得 虚弱',
+            ['2'] = '获得 萎靡',
+            ['3'] = '获得 惩戒',
         }
-    }
-}
-
-AscensionMod.NPCOptionPredicates = {
-    ['angel'] = {
+    },
+    ['devil'] = {
         ['AB'] = {
-            ['7'] = function ()
-                return not AscensionMod:KeeperOrLost()
-            end,
+            ['1'] = '生成 2 随机炸弹',
+            ['2'] = '生成 5 便士',
+            ['3'] = '生成 5 随机硬币',
+            ['4'] = '获得 0.4 攻击修正',
+            ['5'] = '获得 0.3 射速修正',
+            ['6'] = '生成 10 即爆炸弹',
+            ['7'] = '生成 1 颗黑心',
+            ['8'] = '生成 2 张恶魔卡',
+            ['9'] = '生成 1 张力量卡',
         },
         ['CD1'] = {
-            ['5'] = function ()
-                return not AscensionMod:KeeperOrLost()
-            end,
-            ['6'] = function ()
-                return not AscensionMod:KeeperOrLost()
-            end,
-            ['7'] = function ()
-                local p0 = game:GetPlayer(0)
-                return (p0:GetBrokenHearts() >= 1)
-            end,
+            ['1'] = '生成 15 随机硬币',
+            ['2'] = '生成 7 随机炸弹',
+            ['3'] = '生成 金色 恶魔王冠',
+            ['4'] = '生成 彼列之书',
+            ['5'] = '获得 力量', -- 成长形攻击力
+            ['6'] = '获得 腐化', -- 金色恶魔尾巴 黑心 
+            ['7'] = '生成 5 张恶魔卡',
+        },
+        ['CD2'] = {
+            ['1'] = '获得 1 个随机诅咒', -- 随机新诅咒
+            ['2'] = '获得 1 颗碎心',
+            ['3'] = '失去所有 钥匙',
+            ['4'] = '获得 不幸', -- 幸运负倍率
+            ['5'] = '获得 灾厄', -- 随机超级陆夫人
+            ['6'] = '使用 失忆症 大胶囊',
+            ['7'] = '失去 三分之二 射程', -- 不改变倍率
+            ['8'] = '失去 2 颗心最大生命',
         }
     }
 }
@@ -337,74 +360,53 @@ AscensionMod.NPCOptionEvents = {
     ['angel'] = {
         ['AB'] = {
             ['1'] = function()
-                local p0 = game:GetPlayer(0)
-                for _ = 1, 2 do
-                    Isaac.Spawn(
-                        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK,
-                        Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
-                end
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 2, 0)
             end,
             ['2'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.05
-                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+                AscensionMod:AddStats(statsID.SPEED, 0.05)
             end,
             ['3'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + 3
-                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+                AscensionMod:AddStats(statsID.RANGE, 3)
             end,
             ['4'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd + 0.5
-                p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
+                AscensionMod:AddStats(statsID.SHOTSPEED, 0.5)
             end,
             ['5'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd - 0.3
-                p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
+                AscensionMod:AddStats(statsID.SHOTSPEED, -0.3)
             end,
             ['6'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 1
-                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+                AscensionMod:AddStats(statsID.LUCK, 1)
             end,
             ['7'] = function ()
-                local p0 = game:GetPlayer(0)
-                Isaac.Spawn(
-                    EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, HeartSubType.HEART_SOUL,
-                    Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, HeartSubType.HEART_SOUL, 1, 0)
             end,
+            ['8'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_REVERSE_DEVIL, 1, 0)
+            end
         },
         ['CD1'] = {
             ['1'] = function()
                 scheduler:once(function ()
-                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1, 0)
                 end, 1)
                 scheduler:once(function ()
-                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED, 1)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_CHARGED, 1, 0)
                 end, 2)
                 scheduler:once(function ()
-                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 1)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 1, 0)
                 end, 3)
                 scheduler:once(function ()
-                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
+                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1, 0)
                 end, 4)
             end,
             ['2'] = function ()
-                scheduler:seq_n(function ()
-                    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 1)
-                end, 1, 4, true)
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 4, 1)
             end,
             ['3'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + 3
-                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+                AscensionMod:AddStats(statsID.LUCK, 3)
             end,
             ['4'] = function ()
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + 0.15
-                p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+                AscensionMod:AddStats(statsID.SPEED, 0.15)
             end,
             ['5'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -419,19 +421,17 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddBrokenHearts(-1)
             end,
             ['8'] = function ()
-                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY, 2)
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY, 2, 0)
             end,
             ['9'] = function ()
-                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE,
-                    CollectibleType.COLLECTIBLE_ACT_OF_CONTRITION, 1)
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COLLECTIBLE,
+                    CollectibleType.COLLECTIBLE_ACT_OF_CONTRITION, 1, 0)
             end,
             ['10'] = function ()
-                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET,
-                    TrinketType.TRINKET_FILIGREE_FEATHERS | TrinketType.TRINKET_GOLDEN_FLAG, 1)
+                AscensionMod:SpawnTrinket(TrinketType.TRINKET_FILIGREE_FEATHERS, true)
             end,
             ['11'] = function ()
-                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET,
-                    TrinketType.TRINKET_ROSARY_BEAD | TrinketType.TRINKET_GOLDEN_FLAG, 1)
+                AscensionMod:SpawnTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
             end,
         },
         ['CD2'] = {
@@ -448,12 +448,43 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
             end,
             ['3'] = function ()
-                
+                AscensionMod.Angel.discipline = true
             end
         }
     },
     ['devil'] = {
         ['AB'] = {
+            ['1'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, 0, 2, 0)
+            end,
+            ['2'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY, 5, 1)
+            end,
+            ['3'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, 0, 5, 1)
+            end,
+            ['4'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd + 0.4
+                p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+            end,
+            ['5'] = function ()
+                local p0 = game:GetPlayer(0)
+                AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd + 0.3
+                p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
+            end,
+            ['6'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_TROLL, 10, 1)
+            end,
+            ['7'] = function ()
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
+            end,
+            ['8'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_DEVIL, 2, 0)
+            end,
+            ['9'] = function ()
+                AscensionMod:SpawnCard(Card.CARD_STRENGTH, 1, 0)
+            end,
         },
         ['CD1'] = {
         },
@@ -523,6 +554,30 @@ AscensionMod.NPCOptionEvents = {
     }
 }
 
+AscensionMod.NPCOptionPredicates = {
+    ['angel'] = {
+        ['AB'] = {
+            ['7'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+        },
+        ['CD1'] = {
+            ['5'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+            ['6'] = function ()
+                return not AscensionMod:KeeperOrLost()
+            end,
+            ['7'] = function ()
+                local p0 = game:GetPlayer(0)
+                return (p0:GetBrokenHearts() >= 1)
+            end,
+        }
+    },
+    ['devil'] = {
+    }
+}
+
 AscensionMod.NPCDialogueColor = {
     ['angel'] = KColor(1, .98, .76, 1), -- light yellow
     ['devil'] = KColor(.42, 0, .07, 1), -- dark red
@@ -564,7 +619,7 @@ function AscensionMod:NewRunReset()
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
 
-    AscensionMod.Angel.discipline = false
+    AscensionMod.Angel:Reset()
 end
 
 function AscensionMod:StartNewStage()
@@ -1310,25 +1365,94 @@ function AscensionMod:KeeperOrLost()
     return false
 end
 
-function AscensionMod:Spawn(eType, eVariant, eSubType, num)
+---@param eType EntityType
+---@param num number
+---@param delay number
+function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
     if eType == nil then
         if AscensionMod.debug then print('Error: Cannot spawn entity with type "nil".') end
         return
     end
-    if eVariant == nil then
-        eVariant = 0
-    end
-    if eSubType == nil then
-        eSubType = 0
-    end
-    if num == 0 then
-        num = 1
-    end
+    eVariant = eVariant or 0
+    eSubType = eSubType or 0
+    num = num or 1
+    delay = delay or 0
+
     local p0 = game:GetPlayer(0)
-    for _ = 1, num do
-        Isaac.Spawn(
-            eType, eVariant, eSubType,
-            Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+    if delay == 0 then
+        for _ = 1, num do
+            Isaac.Spawn(
+                eType, eVariant, eSubType,
+                Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end
+    else
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+                eType, eVariant, eSubType,
+                Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+        end, delay, num, true)
+    end
+end
+
+---@param pVariant PickupVariant
+---@param num number
+---@param delay number
+function AscensionMod:SpawnPickup(pVariant, pSubType, num, delay)
+    AscensionMod:Spawn(EntityType.ENTITY_PICKUP, pVariant, pSubType, num, delay)
+end
+
+---@param card Card
+---@param num number
+---@param delay number
+function AscensionMod:SpawnCard(card, num, delay)
+    AscensionMod:SpawnPickup(PickupVariant.PICKUP_TAROTCARD, card, num, delay)
+end
+
+---@param tType TrinketType
+---@param isGolden boolean
+function AscensionMod:SpawnTrinket(tType, isGolden)
+    if isGolden then
+        AscensionMod:SpawnPickup(PickupVariant.PICKUP_TRINKET, tType | TrinketType.TRINKET_GOLDEN_FLAG, 1, 0)
+    else
+        AscensionMod:SpawnPickup(PickupVariant.PICKUP_TRINKET, tType, 1, 0)
+    end
+end
+
+---@param tType TrinketType
+---@param isGolden boolean
+function AscensionMod:SwallowTrinket(tType, isGolden)
+    local p0 = game:GetPlayer(0)
+    p0:DropTrinket(Isaac.GetFreeNearPosition(p0.Position, 40), true)
+    if isGolden then
+        p0:AddTrinket(tType | TrinketType.TRINKET_GOLDEN_FLAG)
+    else
+        p0:AddTrinket(tType)
+    end
+    p0:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, UseFlag.USE_NOANIM, -1)
+end
+
+---@param statID number starting from 1 (speed), 2 is tears, 3 is dmg, etc.
+---@param value number
+function AscensionMod:AddStats(statID, value)
+    local p0 = game:GetPlayer(0)
+    if statID == 1 then
+        AscensionMod.playerStats.speedAdd = AscensionMod.playerStats.speedAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_SPEED, true)
+    elseif statID == 2 then
+        AscensionMod.playerStats.tearsAdd = AscensionMod.playerStats.tearsAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_FIREDELAY, true)
+    elseif statID == 3 then
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
+    elseif statID == 4 then
+        AscensionMod.playerStats.rangeAdd = AscensionMod.playerStats.rangeAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+    elseif statID == 5 then
+        AscensionMod.playerStats.shotSpeedAdd = AscensionMod.playerStats.shotSpeedAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED, true)
+    elseif statID == 6 then
+        AscensionMod.playerStats.luckAdd = AscensionMod.playerStats.luckAdd + value
+        p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
     end
 end
 
@@ -1364,6 +1488,10 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.Loo
 
 
 AscensionMod.Angel = {}
+function AscensionMod.Angel:Reset()
+    AscensionMod.Angel.discipline = false
+end
+
 function AscensionMod.Angel:Discipline()
     if not AscensionMod.Angel.discipline then
         return
@@ -1371,7 +1499,7 @@ function AscensionMod.Angel:Discipline()
     local room = game:GetRoom()
     if room:GetType() == RoomType.ROOM_DEVIL then
         local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.5)
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7)
         p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
     end
 end
