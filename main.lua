@@ -10,6 +10,7 @@ local game = Game()
 local SHIFT_INDEX = 35
 local seeds
 local startSeed
+---@class RNG
 local rng
 local statsID = {
     SPEED = 1,
@@ -25,6 +26,8 @@ local RomanNumerals = { }
 
 RomanNumerals.numbers = { 1, 5, 10, 50, 100, 500, 1000 }
 RomanNumerals.chars = { "I", "V", "X", "L", "C", "D", "M" }
+
+AscensionMod.debug = true
 
 function RomanNumerals.ToRomanNumerals(s)
     --s = tostring(s)
@@ -174,10 +177,11 @@ AscensionMod.TextColor = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+AscensionMod.ascensionLevel = 0
 AscensionMod.ascensions = {
-    ['0'] = '深渊 - BOSS 血量增长 25%；每下一层，所有敌人血量增长6%',
-    ['1'] = '精英小怪更多',
-    ['2'] = '地面随机生成蜘蛛网',
+    ['0'] = '深渊 - BOSS 血量更多；每下一层，所有敌人血量成长',
+    ['1'] = '恐怖 - 精英敌人更多；敌人获得降级抗性',
+    ['2'] = '折翼 - 永久飞行效果失效；地面随机生成蜘蛛网',
     ['3'] = '所有魂心和红心变为半颗，双倍基础掉落物变为单倍，金色基础在3次使用后消耗',
     ['4'] = '红心角色初始变为一颗红心血量（不改变血量上限）魂心角色失去一颗魂心',
     ['5'] = '所有角色初始射程，移速，射速，伤害，按原有值下降一定数量 游魂免疫该移速下降',
@@ -727,7 +731,9 @@ function AscensionMod:NewRunReset()
     startSeed = seeds:GetStartSeed()
     rng = RNG(startSeed, SHIFT_INDEX)
     scheduler:clear()
-    AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
+    if not AscensionMod.debug then
+        AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()    
+    end
     AscensionMod.playerStats = {
         speedAdd = 0,
         speedMul = 1,
@@ -1052,6 +1058,9 @@ function AscensionMod:RenderOptionsText()
     end
 
     local NPCID = AscensionMod.NPCID
+    if NPCID == nil then
+        return
+    end
     local optionDescs = AscensionMod.NPCOptionsDesc[NPCID]
     if optionDescs == nil then
         if AscensionMod.debug then print('Error: No option descriptions found for NPC: '..tostring(NPCID)) end
@@ -1214,7 +1223,7 @@ function AscensionMod:RenderStatus()
     if not AscensionMod.Angel.status then
         return
     end
-    local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 40)
+    local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 50)
     local Y_STEP = 15
 
     local x = bottomRight.X
@@ -1565,7 +1574,6 @@ function AscensionMod:GetTableSize(t)
     return s
 end
 
-AscensionMod.debug = false
 ---@param toState boolean
 function AscensionMod:Debug(toState)
     if toState == nil then
@@ -1757,4 +1765,95 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------- 进阶 0 -----------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
--- 每下一层，敌人血量增长 6%；boss血量增加25%
+
+
+AscensionMod.a0 = {
+    ENEMY_HP_SCALE_PER_STAGE = 1.2,
+    BOSS_HP_SCALE = 1.5,
+    CURSED_GLOBIN_MAX_HEALTH = 33,
+}
+
+function AscensionMod.a0.ScaleEnemyHp()
+    if AscensionMod.ascensionLevel < 0 then
+        return
+    end
+    -- thanks to enemy health scaling mod
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent ~= nil then
+            if ent:IsActiveEnemy(false) then
+                if ent.FrameCount == 1 then
+                    local isBoss = ent:IsBoss()
+                    local scale = AscensionMod.a0.GetEnemyHpMul(isBoss)
+                    if not (ent.Type == EntityType.ENTITY_GLOBIN and ent.Variant == 3) then
+                        -- so that cursed globin don't get infinite health
+                        if ent.HitPoints == ent.MaxHitPoints then
+                            ent.MaxHitPoints = math.max(math.floor(ent.MaxHitPoints * scale), 1)
+                            ent.HitPoints = ent.MaxHitPoints
+                        end
+                    else
+                        if ent.HitPoints == AscensionMod.a0.CURSED_GLOBIN_MAX_HEALTH then
+                            ent.MaxHitPoints = math.max(math.floor(ent.MaxHitPoints * scale), 1)
+                            ent.HitPoints = ent.MaxHitPoints
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a0.ScaleEnemyHp)
+
+
+function AscensionMod.a0.GetEnemyHpMul(isBoss)
+    if isBoss == nil then
+        isBoss = false
+    end
+    local stageCnt = AscensionMod.stageCnt
+    if isBoss then
+        return (AscensionMod.a0.ENEMY_HP_SCALE_PER_STAGE ^ stageCnt) * AscensionMod.a0.BOSS_HP_SCALE
+    else
+        return (AscensionMod.a0.ENEMY_HP_SCALE_PER_STAGE ^ stageCnt)
+    end
+end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 1 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a1 = {
+    CHAMPION_CHANCE = 0.6,
+    ANTI_DEVOLVE_CHANCE = 0.5
+}
+
+function AscensionMod.a1.MakeChampion()
+    if AscensionMod.ascensionLevel < 1 then
+        return
+    end
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+        if not ent:IsActiveEnemy(false) then goto continue end
+        if not (ent.FrameCount == 1) then goto continue end
+        local npc = ent:ToNPC()
+        if npc == nil then goto continue end
+        if npc:IsChampion() then goto continue end
+        if rng:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
+            ent:ToNPC():MakeChampion(rng:GetSeed())
+        end
+        ::continue::
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a1.MakeChampion)
+
+function AscensionMod.a1.AntiDevolve()
+    if AscensionMod.ascensionLevel < 1 then
+        return
+    end
+    if rng:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
+        return true
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_DEVOLVE, AscensionMod.a1.AntiDevolve)
