@@ -725,7 +725,7 @@ AscensionMod.NPCDialogueColor = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-local EXTRA_BOMB_ON_START = 1
+local EXTRA_BOMB_ON_START = 3
 function AscensionMod:NewRunReset()
     seeds = game:GetSeeds()
     startSeed = seeds:GetStartSeed()
@@ -1840,6 +1840,7 @@ function AscensionMod.a1.MakeChampion()
         local npc = ent:ToNPC()
         if npc == nil then goto continue end
         if npc:IsChampion() then goto continue end
+        if npc:IsBoss() then goto continue end
         if rng:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
             ent:ToNPC():MakeChampion(rng:GetSeed())
         end
