@@ -551,10 +551,13 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_COLLECTIBLE, CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL, 1, 0)
             end,
             ['5'] = function ()
+                AscensionMod.Devil.status.strength = AscensionMod.Devil.status.strength + 1
+                local x = AscensionMod.Devil.status.strength - 1
                 local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, 1.15 ^ n)
+                AscensionMod:AddStats(statsID.DMG, (1.15 - x * 0.05) ^ n)
             end,
             ['6'] = function ()
+                AscensionMod.Devil.status.corruption = AscensionMod.Devil.status.corruption + 1
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
                 AscensionMod:SwallowTrinket(TrinketType.TRINKET_DAEMONS_TAIL, true)
                 AscensionMod:SwallowTrinket(TrinketType.TRINKET_BLACK_FEATHER, true)
@@ -585,12 +588,14 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddCoins(-999)
             end,
             ['4'] = function ()
+                AscensionMod.Devil.status.unluck = AscensionMod.Devil.status.unluck + 1
+                local x = AscensionMod.Devil.status.unluck - 1
                 local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * 0.8
+                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 - (0.2 - math.min(x, 3) * 0.05))
                 p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
             end,
             ['5'] = function ()
-                -- tbd
+                AscensionMod.Devil.status.cataclysm = AscensionMod.Devil.status.cataclysm + 1
             end,
             ['6'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -686,6 +691,12 @@ AscensionMod.NPCOptionPredicates = {
         }
     },
     ['devil'] = {
+        ['CD1'] = {
+            ['6'] = function ()
+                local p0 = game:GetPlayer(0)
+                return (p0:GetBrokenHearts() >= 10)
+            end
+        },
         ['CD2'] = {
             ['3'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -741,6 +752,7 @@ function AscensionMod:NewRunReset()
     end
 
     AscensionMod.Angel:Reset()
+    AscensionMod.Devil:Reset()
 end
 
 function AscensionMod:StartNewStage()
@@ -1180,6 +1192,22 @@ AscensionMod.statusDisplay = {
     range = {
         c = KColor(1, 1, 1, 1),
         t = '远见'
+    },
+    strength = {
+        c = KColor(1, 1, 1, 1),
+        t = '力量'
+    },
+    corruption = {
+        c = KColor(1, 1, 1, 1),
+        t = '腐化'
+    },
+    unluck = {
+        c = KColor(1, 1, 1, 1),
+        t = '不幸'
+    },
+    cataclysm = {
+        c = KColor(1, 1, 1, 1),
+        t = '灾厄'
     },
 }
 function AscensionMod:RenderStatus()
@@ -1705,6 +1733,26 @@ function AscensionMod.Angel:Discipline()
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, AscensionMod.Angel.Discipline)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 恶魔 -------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.Devil= {}
+function AscensionMod.Devil:Reset()
+    AscensionMod.Devil.status = {
+        strength = 0,
+        corruption = 0,
+        unluck = 0,
+        cataclysm = 0,
+    }
+end
+
+function AscensionMod.Devil.Cataclysm() -- tbd
+end
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------- 进阶 0 -----------------------------------------------------------------------
