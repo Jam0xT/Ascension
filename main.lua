@@ -1650,6 +1650,7 @@ end
 function AscensionMod:SwallowTrinket(tType, isGolden)
     local p0 = game:GetPlayer(0)
     p0:DropTrinket(Isaac.GetFreeNearPosition(p0.Position, 40), true)
+    p0:DropTrinket(Isaac.GetFreeNearPosition(p0.Position, 40), true)
     if isGolden then
         p0:AddTrinket(tType | TrinketType.TRINKET_GOLDEN_FLAG)
     else
