@@ -1143,7 +1143,9 @@ function AscensionMod:RenderExtraInfoText()
     if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
         yOffset = HUSH_STAGE_Y_OFFSET
     end
-    local pos = Isaac.WorldToScreen(Vector(565, 145 + yOffset))
+    local yPos = 145
+    local yStep = 25
+    local pos = Isaac.WorldToScreen(Vector(565, yPos + yOffset))
     local x = pos.X
     local y = pos.Y
     local text = '↑ ↓ 切换选项'
@@ -1156,7 +1158,8 @@ function AscensionMod:RenderExtraInfoText()
         color)
 
     if AscensionMod:FirstStage() then
-        pos = Isaac.WorldToScreen(Vector(565, 170 + yOffset))
+        yPos = yPos + yStep
+        pos = Isaac.WorldToScreen(Vector(565, yPos + yOffset))
         x = pos.X
         y = pos.Y
         text = '← → 切换菜单'
@@ -1169,7 +1172,8 @@ function AscensionMod:RenderExtraInfoText()
             color)
     end
 
-    pos = Isaac.WorldToScreen(Vector(565, 195 + yOffset))
+    yPos = yPos + yStep
+    pos = Isaac.WorldToScreen(Vector(565, yPos + yOffset))
     x = pos.X
     y = pos.Y
     text = '[E] 确认'
