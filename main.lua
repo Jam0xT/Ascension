@@ -1356,7 +1356,7 @@ function AscensionMod:SwitchAscensionLevel(entity, _, _)
         actionUpReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUCONFIRM, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, 0) then
         if actionConfirmReleased then
             actionConfirmReleased = false
             AscensionMod:ConfirmSeletedOption()
