@@ -1138,6 +1138,7 @@ function AscensionMod:RenderOptionsText()
 end
 
 function AscensionMod:RenderExtraInfoText()
+
     local yOffset = 0
     if game:GetLevel():GetStage() == LevelStage.STAGE4_3 then
         yOffset = HUSH_STAGE_Y_OFFSET
@@ -1154,14 +1155,24 @@ function AscensionMod:RenderExtraInfoText()
         scale, scale,
         color)
 
-    if not AscensionMod:FirstStage() then
-        return
+    if AscensionMod:FirstStage() then
+        pos = Isaac.WorldToScreen(Vector(565, 170 + yOffset))
+        x = pos.X
+        y = pos.Y
+        text = '← → 切换菜单'
+        length = font:GetStringWidth(text)
+        scale = 1
+        color = AscensionMod.TextColor['light_gray']
+        font:DrawStringScaled(text,
+            x - length * scale, y,
+            scale, scale,
+            color)
     end
 
-    pos = Isaac.WorldToScreen(Vector(565, 170 + yOffset))
+    pos = Isaac.WorldToScreen(Vector(565, 195 + yOffset))
     x = pos.X
     y = pos.Y
-    text = '← → 切换菜单'
+    text = '[E] 确认'
     length = font:GetStringWidth(text)
     scale = 1
     color = AscensionMod.TextColor['light_gray']
@@ -1388,7 +1399,7 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
         actionUpReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUCONFIRM, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, 0) then
         if actionConfirmReleased then
             actionConfirmReleased = false
             AscensionMod:ConfirmSeletedOption()
