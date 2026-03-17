@@ -720,10 +720,13 @@ function AscensionMod:NewRunReset()
     seeds = game:GetSeeds()
     startSeed = seeds:GetStartSeed()
     rng = RNG(startSeed, SHIFT_INDEX)
+
     scheduler:clear()
+
     if not AscensionMod.debug then
-        AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()    
+        AscensionMod.ascensionLevel = AscensionMod:GetAscensionLevelFromSave()
     end
+
     AscensionMod.playerStats = {
         speedAdd = 0,
         speedMul = 1,
@@ -739,6 +742,9 @@ function AscensionMod:NewRunReset()
         luckMul = 1,
     }
     AscensionMod.stageCnt = 0
+    AscensionMod.bombCntGolden = 0
+    AscensionMod.keyCntGolden = 0
+
     local p0 = game:GetPlayer(0)
     p0:AddBombs(EXTRA_BOMB_ON_START)
     if p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
@@ -1864,3 +1870,144 @@ function AscensionMod.a1.AntiDevolve()
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_DEVOLVE, AscensionMod.a1.AntiDevolve)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 2 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.bombCntGolden = 0
+AscensionMod.keyCntGolden = 0
+
+AscensionMod.a2 = {
+    HEART_DOWNGRADE_CHANCE = 0.9,
+    HEART_DOWNGRADE = {
+        [HeartSubType.HEART_DOUBLEPACK] = HeartSubType.HEART_FULL,
+        [HeartSubType.HEART_FULL] = HeartSubType.HEART_HALF,
+        [HeartSubType.HEART_SOUL] = HeartSubType.HEART_HALF_SOUL,
+        [HeartSubType.HEART_BLACK] = HeartSubType.HEART_SOUL,
+        [HeartSubType.HEART_ETERNAL] = HeartSubType.HEART_SOUL,
+    },
+    DOUBLEPACK_DOWNGRADE_CHANCE = 0.7,
+    GOLDEN_PICKUP_EXHAUST_CHANCE = 0.3,
+}
+
+function AscensionMod.a2.DowngradeHeart()
+    if AscensionMod.ascensionLevel < 2 then
+        return
+    end
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+        if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
+        if ent.Variant == PickupVariant.PICKUP_HEART then
+            if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
+                local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[ent.SubType]
+                if downgradedSubtype then
+                    ent.SubType = downgradedSubtype
+                end
+            end
+            goto continue
+        end
+        if ent.Variant == PickupVariant.PICKUP_BOMB and ent.SubType == BombSubType.BOMB_DOUBLEPACK then
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                ent.SubType = BombSubType.BOMB_NORMAL
+            end
+            goto continue
+        end
+        if ent.Variant == PickupVariant.PICKUP_KEY and ent.SubType == KeySubType.KEY_DOUBLEPACK then
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                ent.SubType = KeySubType.KEY_NORMAL
+            end
+            goto continue
+        end
+        if ent.Variant == PickupVariant.PICKUP_COIN and ent.SubType == CoinSubType.COIN_DOUBLEPACK then
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                ent.SubType = CoinSubType.COIN_PENNY
+            end
+            goto continue
+        end
+        ::continue::
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.DowngradeHeart)
+
+---@param entPickup EntityPickup
+function AscensionMod.a2.CountGoldenPickup(entPickup)
+    if AscensionMod.ascensionLevel < 2 then return nil end
+    if entPickup.Variant == PickupVariant.PICKUP_BOMB and entPickup.SubType == BombSubType.BOMB_GOLDEN then
+        AscensionMod.bombCntGolden = AscensionMod.bombCntGolden + 1
+        return false
+    end
+    if entPickup.Variant == PickupVariant.PICKUP_KEY and entPickup.SubType == KeySubType.KEY_GOLDEN then
+        AscensionMod.keyCntGolden = AscensionMod.keyCntGolden + 1
+        return false
+    end
+    return nil
+end
+AscensionMod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, AscensionMod.a2.CountGoldenPickup)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 4 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a4 = {
+    SS_SPECIAL = {[0] = true, [1] = true, [6] = true, [12] = true, [13] = true, [16] = true},
+    SS_BLUE_FLY_CHANCE = 0.8,
+    RED_HEART_ROT_CHANCE = 0.3,
+}
+
+function AscensionMod.a4.RotHeart()
+    if AscensionMod.ascensionLevel < 4 then
+        return
+    end
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+        if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
+        if ent.Variant ~= PickupVariant.PICKUP_HEART then goto continue end
+        if ent.FrameCount ~= 1 then goto continue end
+
+        local level = game:GetLevel()
+        local roomData = level:GetCurrentRoomDesc().Data
+        local rType = roomData.Type
+        local rVariant = roomData.Variant
+        if rType == RoomType.ROOM_SUPERSECRET then
+            if AscensionMod.a4.SS_SPECIAL[rVariant] then
+                if rng:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
+                    Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_FLY, 2, ent.Position, Vector.Zero, nil)
+                    ent:Remove()
+                    goto continue
+                end
+            end
+        end
+        if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
+            if rng:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
+                ent.SubType = HeartSubType.HEART_ROTTEN
+            end
+        end
+        ::continue::
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotHeart)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 状态 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.statusLevel = {
+}
+
+AscensionMod.statusEventFn = {
+}
+
+function AscensionMod.ResetStatus()
+end
+
+function AscensionMod.AddStatus(statusID, level)
+end
