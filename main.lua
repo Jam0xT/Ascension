@@ -462,21 +462,13 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SwallowTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
             end,
             ['12'] = function ()
-                AscensionMod.Angel.status.blessing = AscensionMod.Angel.status.blessing + 1
+                AscensionMod.GainStatusOnce('blessing')
             end,
             ['13'] = function ()
-                AscensionMod.Angel.status.luck = AscensionMod.Angel.status.luck + 1
-                local x = AscensionMod.Angel.status.luck - 1
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 + 0.2 - math.min(x, 3) * 0.05)
-                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+                AscensionMod.GainStatusOnce('luck')
             end,
             ['14'] = function ()
-                AscensionMod.Angel.status.range = AscensionMod.Angel.status.range + 1
-                local x = AscensionMod.Angel.status.range - 1
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * (1 + 0.3 - math.min(x, 2) * 0.1)
-                p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+                AscensionMod.GainStatusOnce('range')
             end,
             ['15'] = function ()
                 AscensionMod:SpawnCard(Card.CARD_HIEROPHANT, 1, 0)
@@ -484,20 +476,13 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
-                AscensionMod.Angel.status.malaise = AscensionMod.Angel.status.malaise + 1
-                local x = AscensionMod.Angel.status.malaise - 1
-                local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
-                AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
+                AscensionMod.GainStatusOnce('malaise')
             end,
             ['2'] = function ()
-                AscensionMod.Angel.status.weakness = AscensionMod.Angel.status.weakness + 1
-                local x = AscensionMod.Angel.status.weakness
-                local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
+                AscensionMod.GainStatusOnce('weakness')
             end,
             ['3'] = function ()
-                AscensionMod.Angel.status.discipline = AscensionMod.Angel.status.discipline + 1
+                AscensionMod.GainStatusOnce('discipline')
             end
         }
     },
@@ -545,16 +530,10 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_COLLECTIBLE, CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL, 1, 0)
             end,
             ['5'] = function ()
-                AscensionMod.Devil.status.strength = AscensionMod.Devil.status.strength + 1
-                local x = AscensionMod.Devil.status.strength - 1
-                local n = AscensionMod.stageCnt
-                AscensionMod:AddStats(statsID.DMG, (1.15 - x * 0.05) ^ n)
+                AscensionMod.GainStatusOnce('strength')
             end,
             ['6'] = function ()
-                AscensionMod.Devil.status.corruption = AscensionMod.Devil.status.corruption + 1
-                AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
-                AscensionMod:SwallowTrinket(TrinketType.TRINKET_DAEMONS_TAIL, true)
-                AscensionMod:SwallowTrinket(TrinketType.TRINKET_BLACK_FEATHER, true)
+                AscensionMod.GainStatusOnce('corruption')
             end,
             ['7'] = function ()
                 AscensionMod:SpawnCard(Card.CARD_DEVIL, 5, 2)
@@ -582,14 +561,10 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddCoins(-999)
             end,
             ['4'] = function ()
-                AscensionMod.Devil.status.unluck = AscensionMod.Devil.status.unluck + 1
-                local x = AscensionMod.Devil.status.unluck - 1
-                local p0 = game:GetPlayer(0)
-                AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 - (0.2 - math.min(x, 3) * 0.05))
-                p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+                AscensionMod.GainStatusOnce('unluck')
             end,
             ['5'] = function ()
-                AscensionMod.Devil.status.cataclysm = AscensionMod.Devil.status.cataclysm + 1
+                AscensionMod.GainStatusOnce('cataclysm')
             end,
             ['6'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -711,7 +686,11 @@ AscensionMod.NPCDialogueColor = {
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------- 每层发生事件 ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- !!开局事件!! ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -753,9 +732,14 @@ function AscensionMod:NewRunReset()
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
 
-    AscensionMod.Angel:Reset()
-    AscensionMod.Devil:Reset()
+    AscensionMod.ResetStatusLevels()
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------- 每层发生事件 ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 function AscensionMod:StartNewStage()
     if AscensionMod:FirstStage() then
@@ -1228,6 +1212,14 @@ AscensionMod.statusDisplay = {
     cataclysm = {
         c = KColor(1, 1, 1, 1),
         t = '灾厄'
+    },
+    goldenBomb = {
+        c = KColor(1, 1, 1, 1),
+        t = '金炸弹'
+    },
+    goldenKey = {
+        c = KColor(1, 1, 1, 1),
+        t = '金钥匙'
     },
 }
 function AscensionMod:RenderStatus()
@@ -1727,28 +1719,16 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.Loo
 
 
 AscensionMod.Angel = {}
-function AscensionMod.Angel:Reset()
-    AscensionMod.Angel.status = {
-        malaise = 0,
-        weakness = 0,
-        discipline = 0,
-        blessing = 0,
-        luck = 0,
-        range = 0,
-    }
-end
 
 function AscensionMod.Angel:Discipline()
-    if not AscensionMod.Angel.status then
-        return
-    end
-    if AscensionMod.Angel.status.discipline < 1 then
-        return
-    end
+    local statusLevel = AscensionMod.statusLevel.discipline
+    if statusLevel < 1 then return end
+    local x = statusLevel - 1
+
     local room = game:GetRoom()
     if room:GetType() == RoomType.ROOM_DEVIL then
         local p0 = game:GetPlayer(0)
-        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7 + 0.5 * (AscensionMod.Angel.status.discipline - 1))
+        AscensionMod.playerStats.dmgAdd = AscensionMod.playerStats.dmgAdd - (0.7 + 0.5 * x)
         p0:AddCacheFlags(CacheFlag.CACHE_DAMAGE, true)
     end
 end
@@ -1760,17 +1740,9 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, AscensionMod.Angel.Disci
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-AscensionMod.Devil= {}
-function AscensionMod.Devil:Reset()
-    AscensionMod.Devil.status = {
-        strength = 0,
-        corruption = 0,
-        unluck = 0,
-        cataclysm = 0,
-    }
-end
+AscensionMod.Devil = {}
 
-function AscensionMod.Devil.Cataclysm() -- tbd
+function AscensionMod.Devil:Cataclysm() -- tbd
 end
 
 
@@ -1877,9 +1849,6 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_DEVOLVE, AscensionMod.a1.Ant
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-AscensionMod.bombCntGolden = 0
-AscensionMod.keyCntGolden = 0
-
 AscensionMod.a2 = {
     HEART_DOWNGRADE_CHANCE = 0.9,
     HEART_DOWNGRADE = {
@@ -1941,12 +1910,12 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.DowngradeH
 function AscensionMod.a2.CountGoldenPickup(entPickup)
     if AscensionMod.ascensionLevel < 2 then return nil end
     if entPickup.Variant == PickupVariant.PICKUP_BOMB and entPickup.SubType == BombSubType.BOMB_GOLDEN then
-        AscensionMod.bombCntGolden = AscensionMod.bombCntGolden + 1
-        return false
+        AscensionMod.GainStatusOnce('goldenBomb')
+        return true
     end
     if entPickup.Variant == PickupVariant.PICKUP_KEY and entPickup.SubType == KeySubType.KEY_GOLDEN then
-        AscensionMod.keyCntGolden = AscensionMod.keyCntGolden + 1
-        return false
+        AscensionMod.GainStatusOnce('goldenKey')
+        return true
     end
     return nil
 end
@@ -2006,13 +1975,87 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotHeart)
 
 
 AscensionMod.statusLevel = {
+    malaise = 0,
+    weakness = 0,
+    discipline = 0,
+    blessing = 0,
+    luck = 0,
+    range = 0,
+    strength = 0,
+    corruption = 0,
+    unluck = 0,
+    cataclysm = 0,
+    goldenBomb = 0,
+    goldenKey = 0,
 }
 
 AscensionMod.statusEventFn = {
+    malaise = function ()
+        local x = AscensionMod.Angel.status.malaise - 1
+        local n = AscensionMod.stageCnt
+        AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
+        AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
+    end,
+    weakness = function ()
+        local x = AscensionMod.Angel.status.weakness - 1
+        local n = AscensionMod.stageCnt
+        AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
+    end,
+    luck = function ()
+        local x = AscensionMod.Angel.status.luck - 1
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 + 0.2 - math.min(x, 3) * 0.05)
+        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+    end,
+    range = function ()
+        local x = AscensionMod.Angel.status.range - 1
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * (1 + 0.3 - math.min(x, 2) * 0.1)
+        p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
+    end,
+    strength = function ()
+        local x = AscensionMod.Devil.status.strength - 1
+        local n = AscensionMod.stageCnt
+        AscensionMod:AddStats(statsID.DMG, (1.15 - x * 0.05) ^ n)
+    end,
+    corruption = function ()
+        AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
+        AscensionMod:SwallowTrinket(TrinketType.TRINKET_DAEMONS_TAIL, true)
+        AscensionMod:SwallowTrinket(TrinketType.TRINKET_BLACK_FEATHER, true)
+    end,
+    unluck = function ()
+        local x = AscensionMod.Devil.status.unluck - 1
+        local p0 = game:GetPlayer(0)
+        AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 - (0.2 - math.min(x, 3) * 0.05))
+        p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
+    end,
 }
 
-function AscensionMod.ResetStatus()
+function AscensionMod.ResetStatusLevels()
+    AscensionMod.statusLevel = {
+        malaise = 0,
+        weakness = 0,
+        discipline = 0,
+        blessing = 0,
+        luck = 0,
+        range = 0,
+        strength = 0,
+        corruption = 0,
+        unluck = 0,
+        cataclysm = 0,
+        goldenBomb = 0,
+        goldenKey = 0,
+    }
 end
 
-function AscensionMod.AddStatus(statusID, level)
+function AscensionMod.GainStatus(statusID, level)
+    for _  = 1, level do
+        AscensionMod.GainStatusOnce(statusID)
+    end
+end
+
+function AscensionMod.GainStatusOnce(statusID)
+    AscensionMod.statusLevel[statusID] = AscensionMod.statusLevel[statusID] + 1
+    local eventFn = AscensionMod.statusEventFn[statusID]
+    if eventFn ~= nil then eventFn() end
 end
