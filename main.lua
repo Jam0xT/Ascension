@@ -1619,13 +1619,13 @@ function AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, pos)
         for _ = 1, num do
             Isaac.Spawn(
                 eType, eVariant, eSubType,
-                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
+                pos, Vector.Zero, nil)
         end
     else
         scheduler:seq_n(function ()
             Isaac.Spawn(
                 eType, eVariant, eSubType,
-                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
+                pos, Vector.Zero, nil)
         end, delay, num, true)
     end
 end
@@ -1961,16 +1961,22 @@ AscensionMod.a3 = {
 function AscensionMod.a3:Start()
     if AscensionMod.ascensionLevel < 3 then return end
     local p0 = game:GetPlayer(0)
-    if p0:GetPlayerType() == PlayerType.PLAYER_KEEPER or p0:GetPlayerType() == PlayerType.PLAYER_KEEPER_B then
+    local pType = p0:GetPlayerType()
+    if pType == PlayerType.PLAYER_KEEPER or pType == PlayerType.PLAYER_KEEPER_B then
         AscensionMod:AddStats(statsID.LUCK, -1)
         return
     end
-    if p0:GetPlayerType() == PlayerType.PLAYER_THEFORGOTTEN then
+    if pType == PlayerType.PLAYER_THEFORGOTTEN then
         p0:AddBrokenHearts(4)
         return
     end
+    if pType == PlayerType.PLAYER_JACOB or pType == PlayerType.PLAYER_ESAU then
+        p0:GetMainTwin():AddBrokenHearts(8)
+        p0:GetOtherTwin():AddBrokenHearts(8)
+        return
+    end
     p0:AddBrokenHearts(8)
-    if p0:GetPlayerType() == PlayerType.PLAYER_THELOST or p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
+    if pType == PlayerType.PLAYER_THELOST or pType == PlayerType.PLAYER_THELOST_B then
         AscensionMod:AddStats(statsID.LUCK, -1)
     end
 end
