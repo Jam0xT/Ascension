@@ -1603,7 +1603,8 @@ end
 ---@param eType EntityType
 ---@param num number
 ---@param delay number
-function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
+---@param pos Vector
+function AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, pos)
     if eType == nil then
         if AscensionMod.debug then print('Error: Cannot spawn entity with type "nil".') end
         return
@@ -1612,21 +1613,29 @@ function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
     eSubType = eSubType or 0
     num = num or 1
     delay = delay or 0
+    pos = pos or (game:GetPlayer(0).Position)
 
-    local p0 = game:GetPlayer(0)
     if delay == 0 then
         for _ = 1, num do
             Isaac.Spawn(
                 eType, eVariant, eSubType,
-                Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
         end
     else
         scheduler:seq_n(function ()
             Isaac.Spawn(
                 eType, eVariant, eSubType,
-                Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
+                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
         end, delay, num, true)
     end
+end
+
+---@param eType EntityType
+---@param num number
+---@param delay number
+function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
+    local p0 = game:GetPlayer(0)
+    AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, p0.Position)
 end
 
 ---@param pVariant PickupVariant
@@ -1634,6 +1643,11 @@ end
 ---@param delay number
 function AscensionMod:SpawnPickup(pVariant, pSubType, num, delay)
     AscensionMod:Spawn(EntityType.ENTITY_PICKUP, pVariant, pSubType, num, delay)
+end
+
+function AscensionMod:SpawnPickupAt(pVariant, pSubType, num, delay, pos)
+    pos = pos or (game:GetPlayer(0).Position)
+    AscensionMod:SpawnAt(EntityType.ENTITY_PICKUP, pVariant, pSubType, num, delay, pos)
 end
 
 ---@param card Card
@@ -1879,7 +1893,7 @@ function AscensionMod.a2:DowngradeHeart()
             if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
                 local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[ent.SubType]
                 if downgradedSubtype then
-                    AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, downgradedSubtype, 1, 0)
+                    AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, downgradedSubtype, 1, 0, ent.Position)
                     ent:Remove()
                 end
             end
@@ -1887,21 +1901,21 @@ function AscensionMod.a2:DowngradeHeart()
         end
         if ent.Variant == PickupVariant.PICKUP_BOMB and ent.SubType == BombSubType.BOMB_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_NORMAL, 1, 0)
+                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_NORMAL, 1, 0, ent.Position)
                 ent:Remove()
             end
             goto continue
         end
         if ent.Variant == PickupVariant.PICKUP_KEY and ent.SubType == KeySubType.KEY_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickup(PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1, 0)
+                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1, 0, ent.Position)
                 ent:Remove()
             end
             goto continue
         end
         if ent.Variant == PickupVariant.PICKUP_COIN and ent.SubType == CoinSubType.COIN_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY, 1, 0)
+                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY, 1, 0, ent.Position)
                 ent:Remove()
             end
             goto continue
@@ -1999,7 +2013,7 @@ function AscensionMod.a4:RotHeart()
         end
         if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
             if rng:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
-                AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0)
+                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0, ent.Position)
                 ent:Remove()
             end
         end
