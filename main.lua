@@ -462,13 +462,13 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SwallowTrinket(TrinketType.TRINKET_ROSARY_BEAD, true)
             end,
             ['12'] = function ()
-                AscensionMod.GainStatusOnce('blessing')
+                AscensionMod:GainStatusOnce('blessing')
             end,
             ['13'] = function ()
-                AscensionMod.GainStatusOnce('luck')
+                AscensionMod:GainStatusOnce('luck')
             end,
             ['14'] = function ()
-                AscensionMod.GainStatusOnce('range')
+                AscensionMod:GainStatusOnce('range')
             end,
             ['15'] = function ()
                 AscensionMod:SpawnCard(Card.CARD_HIEROPHANT, 1, 0)
@@ -476,13 +476,13 @@ AscensionMod.NPCOptionEvents = {
         },
         ['CD2'] = {
             ['1'] = function ()
-                AscensionMod.GainStatusOnce('malaise')
+                AscensionMod:GainStatusOnce('malaise')
             end,
             ['2'] = function ()
-                AscensionMod.GainStatusOnce('weakness')
+                AscensionMod:GainStatusOnce('weakness')
             end,
             ['3'] = function ()
-                AscensionMod.GainStatusOnce('discipline')
+                AscensionMod:GainStatusOnce('discipline')
             end
         }
     },
@@ -530,10 +530,10 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_COLLECTIBLE, CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL, 1, 0)
             end,
             ['5'] = function ()
-                AscensionMod.GainStatusOnce('strength')
+                AscensionMod:GainStatusOnce('strength')
             end,
             ['6'] = function ()
-                AscensionMod.GainStatusOnce('corruption')
+                AscensionMod:GainStatusOnce('corruption')
             end,
             ['7'] = function ()
                 AscensionMod:SpawnCard(Card.CARD_DEVIL, 5, 2)
@@ -561,10 +561,10 @@ AscensionMod.NPCOptionEvents = {
                 p0:AddCoins(-999)
             end,
             ['4'] = function ()
-                AscensionMod.GainStatusOnce('unluck')
+                AscensionMod:GainStatusOnce('unluck')
             end,
             ['5'] = function ()
-                AscensionMod.GainStatusOnce('cataclysm')
+                AscensionMod:GainStatusOnce('cataclysm')
             end,
             ['6'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -1222,10 +1222,8 @@ AscensionMod.statusDisplay = {
         t = '金钥匙'
     },
 }
+
 function AscensionMod:RenderStatus()
-    if not AscensionMod.Angel.status then
-        return
-    end
     local bottomRight = Vector(Isaac.GetScreenWidth() - 30, Isaac.GetScreenHeight() - 50)
     local Y_STEP = 15
 
@@ -1235,7 +1233,8 @@ function AscensionMod:RenderStatus()
     local length
     local scale
     local color
-    for statusID, num in pairs(AscensionMod.Angel.status) do
+
+    for statusID, num in pairs(AscensionMod.statusLevel) do
         if num > 0 then
             if num <= 20 then
                 text = AscensionMod.statusDisplay[statusID].t..' '..RomanNumerals.ToRomanNumerals(num)
@@ -1862,7 +1861,7 @@ AscensionMod.a2 = {
     GOLDEN_PICKUP_EXHAUST_CHANCE = 0.3,
 }
 
-function AscensionMod.a2.DowngradeHeart()
+function AscensionMod.a2:DowngradeHeart()
     if AscensionMod.ascensionLevel < 2 then
         return
     end
@@ -1907,15 +1906,23 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.DowngradeHeart)
 
 ---@param entPickup EntityPickup
-function AscensionMod.a2.CountGoldenPickup(entPickup)
+function AscensionMod.a2:CountGoldenPickup(entPickup)
     if AscensionMod.ascensionLevel < 2 then return nil end
     if entPickup.Variant == PickupVariant.PICKUP_BOMB and entPickup.SubType == BombSubType.BOMB_GOLDEN then
-        AscensionMod.GainStatusOnce('goldenBomb')
-        return true
+        AscensionMod:GainStatusOnce('goldenBomb')
+        scheduler:once(function ()
+            local p0 = game:GetPlayer(0)
+            p0:RemoveGoldenBomb()
+        end, 1)
+        return nil
     end
     if entPickup.Variant == PickupVariant.PICKUP_KEY and entPickup.SubType == KeySubType.KEY_GOLDEN then
-        AscensionMod.GainStatusOnce('goldenKey')
-        return true
+        AscensionMod:GainStatusOnce('goldenKey')
+        scheduler:once(function ()
+            local p0 = game:GetPlayer(0)
+            p0:RemoveGoldenKey()
+        end, 1)
+        return nil
     end
     return nil
 end
@@ -1933,7 +1940,7 @@ AscensionMod.a4 = {
     RED_HEART_ROT_CHANCE = 0.3,
 }
 
-function AscensionMod.a4.RotHeart()
+function AscensionMod.a4:RotHeart()
     if AscensionMod.ascensionLevel < 4 then
         return
     end
@@ -1991,30 +1998,30 @@ AscensionMod.statusLevel = {
 
 AscensionMod.statusEventFn = {
     malaise = function ()
-        local x = AscensionMod.Angel.status.malaise - 1
+        local x = AscensionMod.statusLevel.malaise - 1
         local n = AscensionMod.stageCnt
         AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
         AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
     end,
     weakness = function ()
-        local x = AscensionMod.Angel.status.weakness - 1
+        local x = AscensionMod.statusLevel.weakness - 1
         local n = AscensionMod.stageCnt
         AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
     end,
     luck = function ()
-        local x = AscensionMod.Angel.status.luck - 1
+        local x = AscensionMod.statusLevel.luck - 1
         local p0 = game:GetPlayer(0)
         AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 + 0.2 - math.min(x, 3) * 0.05)
         p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
     end,
     range = function ()
-        local x = AscensionMod.Angel.status.range - 1
+        local x = AscensionMod.statusLevel.range - 1
         local p0 = game:GetPlayer(0)
         AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * (1 + 0.3 - math.min(x, 2) * 0.1)
         p0:AddCacheFlags(CacheFlag.CACHE_RANGE, true)
     end,
     strength = function ()
-        local x = AscensionMod.Devil.status.strength - 1
+        local x = AscensionMod.statusLevel.strength - 1
         local n = AscensionMod.stageCnt
         AscensionMod:AddStats(statsID.DMG, (1.15 - x * 0.05) ^ n)
     end,
@@ -2024,14 +2031,14 @@ AscensionMod.statusEventFn = {
         AscensionMod:SwallowTrinket(TrinketType.TRINKET_BLACK_FEATHER, true)
     end,
     unluck = function ()
-        local x = AscensionMod.Devil.status.unluck - 1
+        local x = AscensionMod.statusLevel.unluck - 1
         local p0 = game:GetPlayer(0)
         AscensionMod.playerStats.luckMul = AscensionMod.playerStats.luckMul * (1 - (0.2 - math.min(x, 3) * 0.05))
         p0:AddCacheFlags(CacheFlag.CACHE_LUCK, true)
     end,
 }
 
-function AscensionMod.ResetStatusLevels()
+function AscensionMod:ResetStatusLevels()
     AscensionMod.statusLevel = {
         malaise = 0,
         weakness = 0,
@@ -2048,13 +2055,13 @@ function AscensionMod.ResetStatusLevels()
     }
 end
 
-function AscensionMod.GainStatus(statusID, level)
+function AscensionMod:GainStatus(statusID, level)
     for _  = 1, level do
         AscensionMod.GainStatusOnce(statusID)
     end
 end
 
-function AscensionMod.GainStatusOnce(statusID)
+function AscensionMod:GainStatusOnce(statusID)
     AscensionMod.statusLevel[statusID] = AscensionMod.statusLevel[statusID] + 1
     local eventFn = AscensionMod.statusEventFn[statusID]
     if eventFn ~= nil then eventFn() end
