@@ -1633,9 +1633,39 @@ end
 ---@param eType EntityType
 ---@param num number
 ---@param delay number
+---@param pos Vector
+function AscensionMod:SpawnNear(eType, eVariant, eSubType, num, delay, pos)
+    if eType == nil then
+        if AscensionMod.debug then print('Error: Cannot spawn entity with type "nil".') end
+        return
+    end
+    eVariant = eVariant or 0
+    eSubType = eSubType or 0
+    num = num or 1
+    delay = delay or 0
+    pos = pos or (game:GetPlayer(0).Position)
+
+    if delay == 0 then
+        for _ = 1, num do
+            Isaac.Spawn(
+                eType, eVariant, eSubType,
+                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
+        end
+    else
+        scheduler:seq_n(function ()
+            Isaac.Spawn(
+                eType, eVariant, eSubType,
+                Isaac.GetFreeNearPosition(pos, 40), Vector.Zero, nil)
+        end, delay, num, true)
+    end
+end
+
+---@param eType EntityType
+---@param num number
+---@param delay number
 function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
     local p0 = game:GetPlayer(0)
-    AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, Isaac.GetFreeNearPosition(p0.Position, 40))
+    AscensionMod:SpawnNear(eType, eVariant, eSubType, num, delay, p0.Position)
 end
 
 ---@param pVariant PickupVariant
