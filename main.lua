@@ -328,7 +328,7 @@ AscensionMod.NPCOptionsDesc = {
         },
         ['CD1'] = {
             ['1'] = '生成 钥匙 全家福',
-            ['2'] = '生成 4 金钥匙',
+            ['2'] = '生成 2 金钥匙',
             ['3'] = '获得 3 幸运',
             ['4'] = '获得 0.15 移速',
             ['5'] = '获得 1 颗心最大生命',
@@ -428,7 +428,7 @@ AscensionMod.NPCOptionEvents = {
                 end, 4)
             end,
             ['2'] = function ()
-                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 4, 1)
+                AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 2, 0)
             end,
             ['3'] = function ()
                 AscensionMod:AddStats(statsID.LUCK, 3)
@@ -1913,49 +1913,33 @@ AscensionMod.a2 = {
     keyCntLastFrame = -1,
 }
 
-function AscensionMod.a2:DowngradeHeart()
-    if AscensionMod.ascensionLevel < 2 then
-        return
-    end
-    local entities = Isaac.GetRoomEntities()
-    for _, ent in pairs(entities) do
-        if ent == nil then goto continue end
-        if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
-        if ent.Variant == PickupVariant.PICKUP_HEART then
-            if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
-                local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[ent.SubType]
-                if downgradedSubtype then
-                    AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, downgradedSubtype, 1, 0, ent.Position)
-                    ent:Remove()
-                end
-            end
-            goto continue
+function AscensionMod.a2:DowngradePickup(eType, eVariant, eSubType, _, _, _, seed)
+    if AscensionMod.ascensionLevel < 2 then return end
+    if eType ~= EntityType.ENTITY_PICKUP then return end
+    if eVariant == PickupVariant.PICKUP_HEART then
+        if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
+            local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[eSubType]
+            return { eType, eVariant, downgradedSubtype, seed }
         end
-        if ent.Variant == PickupVariant.PICKUP_BOMB and ent.SubType == BombSubType.BOMB_DOUBLEPACK then
-            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_NORMAL, 1, 0, ent.Position)
-                ent:Remove()
-            end
-            goto continue
+    elseif eVariant == PickupVariant.PICKUP_COIN then
+        if eSubType ~= CoinSubType.COIN_DOUBLEPACK then return end
+        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+            return { eType, eVariant, CoinSubType.COIN_PENNY, seed }
         end
-        if ent.Variant == PickupVariant.PICKUP_KEY and ent.SubType == KeySubType.KEY_DOUBLEPACK then
-            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1, 0, ent.Position)
-                ent:Remove()
-            end
-            goto continue
+    elseif eVariant == PickupVariant.PICKUP_BOMB then
+        if eSubType ~= BombSubType.BOMB_DOUBLEPACK then return end
+        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+            return { eType, eVariant, BombSubType.BOMB_NORMAL, seed }
         end
-        if ent.Variant == PickupVariant.PICKUP_COIN and ent.SubType == CoinSubType.COIN_DOUBLEPACK then
-            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY, 1, 0, ent.Position)
-                ent:Remove()
-            end
-            goto continue
+    elseif eVariant == PickupVariant.PICKUP_KEY then
+        if eSubType ~= KeySubType.KEY_DOUBLEPACK then return end
+        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+            print('downgrade key ring')
+            return { eType, eVariant, KeySubType.KEY_NORMAL, seed }
         end
-        ::continue::
     end
 end
-AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.DowngradeHeart)
+AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_SPAWN, AscensionMod.a2.DowngradePickup)
 
 ---@param entPickup EntityPickup
 function AscensionMod.a2:CountGoldenPickup(entPickup)
