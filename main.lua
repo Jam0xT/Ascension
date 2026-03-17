@@ -1905,26 +1905,30 @@ function AscensionMod.a2.DowngradeHeart()
             if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
                 local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[ent.SubType]
                 if downgradedSubtype then
-                    ent.SubType = downgradedSubtype
+                    AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, downgradedSubtype, 1, 0)
+                    ent:Remove()
                 end
             end
             goto continue
         end
         if ent.Variant == PickupVariant.PICKUP_BOMB and ent.SubType == BombSubType.BOMB_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                ent.SubType = BombSubType.BOMB_NORMAL
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_NORMAL, 1, 0)
+                ent:Remove()
             end
             goto continue
         end
         if ent.Variant == PickupVariant.PICKUP_KEY and ent.SubType == KeySubType.KEY_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                ent.SubType = KeySubType.KEY_NORMAL
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_KEY, KeySubType.KEY_NORMAL, 1, 0)
+                ent:Remove()
             end
             goto continue
         end
         if ent.Variant == PickupVariant.PICKUP_COIN and ent.SubType == CoinSubType.COIN_DOUBLEPACK then
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-                ent.SubType = CoinSubType.COIN_PENNY
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY, 1, 0)
+                ent:Remove()
             end
             goto continue
         end
@@ -1986,7 +1990,8 @@ function AscensionMod.a4.RotHeart()
         end
         if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
             if rng:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
-                ent.SubType = HeartSubType.HEART_ROTTEN
+                AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0)
+                ent:Remove()
             end
         end
         ::continue::
