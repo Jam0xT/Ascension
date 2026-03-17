@@ -231,7 +231,7 @@ AscensionMod.PrevControledField = {
 AscensionMod.NPCPredicates = {
     ['angel'] = function ()
         -- 第一层必出 二三章可出 大教堂可出
-        if AscensionMod:FirstStage() then
+        if AscensionMod:IsFirstStage() then
             return true
         else
             local level = game:GetLevel()
@@ -246,7 +246,7 @@ AscensionMod.NPCPredicates = {
     end,
     ['devil'] = function ()
         -- 除了第一层和大教堂都可出
-        if AscensionMod:FirstStage() then
+        if AscensionMod:IsFirstStage() then
             return false
         end
         local level = game:GetLevel()
@@ -261,13 +261,13 @@ AscensionMod.NPCPredicates = {
 AscensionMod.NPCDialogues = {
     ['angel'] = {
         ['至少……也要见到……第一坨大便吧……'] = function ()
-            return (AscensionMod:FirstStage() and (not AscensionMod.FoundPoopLastRun))
+            return (AscensionMod:IsFirstStage() and (not AscensionMod.FoundPoopLastRun))
         end,
         ['你好……'] = function ()
             return true
         end,
         ['我把你……带回来了……'] = function ()
-            return AscensionMod:FirstStage()
+            return AscensionMod:IsFirstStage()
         end,
         ['重铸……天使荣耀……'] = function ()
             return true
@@ -721,8 +721,8 @@ function AscensionMod:NewRunReset()
         luckMul = 1,
     }
     AscensionMod.stageCnt = 0
-    AscensionMod.bombCntGolden = 0
-    AscensionMod.keyCntGolden = 0
+
+    AscensionMod:ResetStatusLevels()
 
     local p0 = game:GetPlayer(0)
     p0:AddBombs(EXTRA_BOMB_ON_START)
@@ -731,8 +731,10 @@ function AscensionMod:NewRunReset()
             EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
+end
 
-    AscensionMod.ResetStatusLevels()
+function AscensionMod:OnFirstStageOptionConfirm()
+    AscensionMod.a3:Start()
 end
 
 
@@ -742,7 +744,7 @@ end
 
 
 function AscensionMod:StartNewStage()
-    if AscensionMod:FirstStage() then
+    if AscensionMod:IsFirstStage() then
         AscensionMod:NewRunReset()
     end
 
@@ -997,7 +999,7 @@ function AscensionMod:RenderAscensionText()
     if AscensionMod.controledField == 'ascension' then
         colorSelected = AscensionMod.TextColor['gray']
     end
-    if not AscensionMod:FirstStage() then
+    if not AscensionMod:IsFirstStage() then
         colorSelected = AscensionMod.TextColor['white']
     end
 
@@ -1137,7 +1139,7 @@ function AscensionMod:RenderExtraInfoText()
         scale, scale,
         color)
 
-    if AscensionMod:FirstStage() then
+    if AscensionMod:IsFirstStage() then
         yPos = yPos + yStep
         pos = Isaac.WorldToScreen(Vector(565, yPos + yOffset))
         x = pos.X
@@ -1266,7 +1268,7 @@ function AscensionMod:SwitchControledField(entity, _, _)
     if AscensionMod.isOptionConfirmed then
         return
     end
-    if not AscensionMod:FirstStage() then
+    if not AscensionMod:IsFirstStage() then
         return
     end
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
@@ -1304,7 +1306,7 @@ function AscensionMod:SwitchAscensionLevel(entity, _, _)
     if AscensionMod.isOptionConfirmed or AscensionMod.controledField ~= 'ascension' then
         return
     end
-    if not AscensionMod:FirstStage() then
+    if not AscensionMod:IsFirstStage() then
         AscensionMod.controledField = 'option'
         return
     end
@@ -1443,6 +1445,10 @@ function AscensionMod:ConfirmSeletedOption()
         scheduler:once(function ()
             AscensionMod:EnablePlayerControls()
         end, 1) -- 延迟 1 帧防止按空格选择时同时触发主动
+
+        if AscensionMod:IsFirstStage() then
+            AscensionMod:OnFirstStageOptionConfirm()
+        end
     elseif AscensionMod.controledField == 'ascension' then
         AscensionMod.controledField = 'option'
     else
@@ -1557,7 +1563,7 @@ function AscensionMod:EnablePlayerControls()
     end
 end
 
-function AscensionMod:FirstStage()
+function AscensionMod:IsFirstStage()
     -- aka. basement 1 / cellar 1 / burning basement 1
     local level = game:GetLevel()
     local stage = level:GetStage()
@@ -1927,6 +1933,33 @@ function AscensionMod.a2:CountGoldenPickup(entPickup)
     return nil
 end
 AscensionMod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, AscensionMod.a2.CountGoldenPickup)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 4 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a3 = {
+    STARTING_BROKEN_HEARTS = 8,
+}
+
+function AscensionMod.a3:Start()
+    if AscensionMod.ascensionLevel < 3 then return end
+    local p0 = game:GetPlayer(0)
+    if p0:GetPlayerType() == PlayerType.PLAYER_KEEPER or p0:GetPlayerType() == PlayerType.PLAYER_KEEPER_B then
+        AscensionMod:AddStats(statsID.LUCK, -1)
+        return
+    end
+    if p0:GetPlayerType() == PlayerType.PLAYER_THEFORGOTTEN then
+        p0:AddBrokenHearts(4)
+        return
+    end
+    p0:AddBrokenHearts(8)
+    if p0:GetPlayerType() == PlayerType.PLAYER_THELOST or p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
+        AscensionMod:AddStats(statsID.LUCK, -1)
+    end
+end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
