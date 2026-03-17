@@ -1635,7 +1635,7 @@ end
 ---@param delay number
 function AscensionMod:Spawn(eType, eVariant, eSubType, num, delay)
     local p0 = game:GetPlayer(0)
-    AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, p0.Position)
+    AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, Isaac.GetFreeNearPosition(p0.Position, 40))
 end
 
 ---@param pVariant PickupVariant
@@ -1879,6 +1879,8 @@ AscensionMod.a2 = {
     },
     DOUBLEPACK_DOWNGRADE_CHANCE = 0.7,
     GOLDEN_PICKUP_EXHAUST_CHANCE = 0.3,
+    bombCntLastFrame = -1,
+    keyCntLastFrame = -1,
 }
 
 function AscensionMod.a2:DowngradeHeart()
@@ -1948,9 +1950,37 @@ function AscensionMod.a2:CountGoldenPickup(entPickup)
 end
 AscensionMod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, AscensionMod.a2.CountGoldenPickup)
 
+function AscensionMod.a2:CheckGoldenPickup()
+    if AscensionMod.ascensionLevel < 2 then
+        return
+    end
+    local p0 = game:GetPlayer(0)
+    local bombCntThisFrame = p0:GetNumBombs()
+    local keyCntThisFrame = p0:GetNumKeys()
+    if AscensionMod.statusLevel.goldenBomb > 0 then
+        if bombCntThisFrame == AscensionMod.a2.bombCntLastFrame - 1 then
+            p0:AddBombs(1)
+            if rng:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+                AscensionMod.statusLevel.goldenBomb = AscensionMod.statusLevel.goldenBomb - 1
+            end
+        end
+    end
+    if AscensionMod.statusLevel.goldenKey > 0 then
+        if keyCntThisFrame == AscensionMod.a2.keyCntLastFrame - 1 then
+            p0:AddKeys(1)
+            if rng:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+                AscensionMod.statusLevel.goldenKey = AscensionMod.statusLevel.goldenKey - 1
+            end
+        end
+    end
+    AscensionMod.a2.bombCntLastFrame = bombCntThisFrame
+    AscensionMod.a2.keyCntLastFrame = keyCntThisFrame
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.CheckGoldenPickup)
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------ 进阶 4 -----------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 3 -----------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
