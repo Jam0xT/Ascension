@@ -745,6 +745,7 @@ end
 
 function AscensionMod:OnFirstStageOptionConfirm()
     AscensionMod.a3:Start()
+    AscensionMod.a6:Start()
 end
 
 
@@ -2082,6 +2083,32 @@ function AscensionMod.a4:RotHeart()
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotHeart)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 6 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a6 = {}
+
+function AscensionMod.a6:Start()
+    AscensionMod.a6:Backstab()
+end
+
+function AscensionMod.a6:Backstab()
+    if AscensionMod.ascensionLevel < 6 then
+        return
+    end
+    local p0 = game:GetPlayer(0)
+    local hp = p0:GetHearts() / 2 + p0:GetSoulHearts() / 2
+    local dmgFlags = DamageFlag.DAMAGE_NO_PENALTIES | DamageFlag.DAMAGE_NO_MODIFIERS
+    if hp >= 3 then
+        p0:TakeDamage(2, dmgFlags, EntityRef(p0), 0)
+    elseif hp >= 2 then
+        p0:TakeDamage(1, dmgFlags, EntityRef(p0), 0)
+    end
+end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
