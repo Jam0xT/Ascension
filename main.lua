@@ -180,16 +180,16 @@ AscensionMod.TextColor = {
 AscensionMod.ascensionLevel = 0
 AscensionMod.ascensions = {
     ['0'] = '深渊 - BOSS 血量更多；每下一层，所有敌人血量成长',
-    ['1'] = '恐怖 - 精英敌人更多；敌人获得降级抗性',
+    ['1'] = '进化 - 精英敌人更多；敌人获得降级抗性',
     ['2'] = '赝品 - 基础掉落物更差；金钥匙与金炸弹可以保持持有，但在使用时可能消耗',
     ['3'] = '心碎 - 非店主角色开局获得 8 颗碎心；店主与游魂角色额外获得 -1 幸运',
-    ['4'] = '寄生 - 它们腐烂了',
+    ['4'] = '腐烂 - 它们烂了',
     ['5'] = '坚不可摧 - 心脏敌人更强大',
     ['6'] = '背刺 - 开局血量超过 2 颗心时，受到 1 颗心伤害',
     ['7'] = '捉拿 - 别想逃！',
     ['8'] = '贪婪 - $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$',
     ['9'] = '贡品 - 下层时可保留的基础更少',
-    ['10'] = '堕化 - 道具品质降低',
+    ['10'] = '回收 - 道具品质降低',
 }
 
 
@@ -318,7 +318,7 @@ AscensionMod.NPCOptionsDesc = {
     ['angel'] = {
         ['AB'] = {
             ['1'] = '生成 2 钥匙圈',
-            ['2'] = '获得 0.05 移速',
+            ['2'] = '获得 0.1 移速',
             ['3'] = '获得 3 射程',
             ['4'] = '获得 0.5 弹速',
             ['5'] = '失去 0.3 弹速',
@@ -330,7 +330,7 @@ AscensionMod.NPCOptionsDesc = {
             ['1'] = '生成 钥匙 全家福',
             ['2'] = '生成 2 金钥匙',
             ['3'] = '获得 3 幸运',
-            ['4'] = '获得 0.15 移速',
+            ['4'] = '获得 0.2 移速',
             ['5'] = '获得 1 颗心最大生命',
             ['6'] = '获得 1 颗永恒之心',
             ['7'] = '失去 1 颗碎心',
@@ -391,7 +391,7 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 2, 0)
             end,
             ['2'] = function ()
-                AscensionMod:AddStats(statsID.SPEED, 0.05)
+                AscensionMod:AddStats(statsID.SPEED, 0.10)
             end,
             ['3'] = function ()
                 AscensionMod:AddStats(statsID.RANGE, 3)
@@ -434,7 +434,7 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:AddStats(statsID.LUCK, 3)
             end,
             ['4'] = function ()
-                AscensionMod:AddStats(statsID.SPEED, 0.15)
+                AscensionMod:AddStats(statsID.SPEED, 0.2)
             end,
             ['5'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -1917,6 +1917,7 @@ function AscensionMod.a2:DowngradePickup(eType, eVariant, eSubType, _, _, _, see
     if AscensionMod.ascensionLevel < 2 then return end
     if eType ~= EntityType.ENTITY_PICKUP then return end
     if eVariant == PickupVariant.PICKUP_HEART then
+        print('try downgrade')
         if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
             local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[eSubType]
             return { eType, eVariant, downgradedSubtype, seed }
