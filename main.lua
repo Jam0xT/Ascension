@@ -1978,7 +1978,9 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, AscensionMod.a2.CountGoldenPickup)
 
 function AscensionMod.a2:CheckGoldenPickup()
-    if AscensionMod.ascensionLevel < 2 then
+    if AscensionMod.ascensionLevel < 2 then return end
+    if AscensionMod.a9.lostPickupThisFrame then
+        AscensionMod.a9.lostPickupThisFrame = false
         return
     end
     local p0 = game:GetPlayer(0)
@@ -2110,6 +2112,32 @@ function AscensionMod.a6:Backstab()
         p0:TakeDamage(1, dmgFlags, EntityRef(p0), 0)
     end
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 9 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a9 = {
+    KEEP_BOMB = 0.5,
+    KEEP_KEY = 0.2,
+    KEEP_COIN = 0.5,
+    lostPickupThisFrame = false,
+}
+
+function AscensionMod.a9:LosePickup()
+    if AscensionMod.ascensionLevel < 9 then return end
+    local p0 = game:GetPlayer(0)
+    local bombs = p0:GetNumBombs()
+    p0:AddBombs(math.ceil(bombs * AscensionMod.a9.KEEP_BOMB))
+    local keys = p0:GetNumKeys()
+    p0:AddKeys(math.ceil(keys * AscensionMod.a9.KEEP_KEY))
+    local coins = p0:GetNumCoins()
+    p0:AddCoins(math.ceil(coins * AscensionMod.a9.KEEP_COIN))
+    AscensionMod.a9.lostPickupThisFrame = true
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.a9.LosePickup)
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
