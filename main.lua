@@ -188,7 +188,7 @@ AscensionMod.ascensions = {
     ['6'] = '背刺 - 开局受到伤害',
     ['7'] = '捉拿 - 别想逃！',
     ['8'] = '贪婪 - $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$',
-    ['9'] = '贡品 - 下层时可保留的基础更少',
+    ['9'] = '坠落 - 下层时可保留的基础更少',
     ['10'] = '坚不可摧 - 心脏敌人更强大',
     ['11'] = '电击 - 滋滋',
     ['12'] = '缄默 - 射程大幅下降',
@@ -746,6 +746,7 @@ end
 function AscensionMod:OnFirstStageOptionConfirm()
     AscensionMod.a3:Start()
     AscensionMod.a6:Start()
+    AscensionMod.a12:Start()
 end
 
 
@@ -2108,6 +2109,22 @@ function AscensionMod.a6:Backstab()
     elseif hp >= 2 then
         p0:TakeDamage(1, dmgFlags, EntityRef(p0), 0)
     end
+end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 12 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a12 = {}
+function AscensionMod.a12:Start()
+    AscensionMod.a12:RangeDown()
+end
+
+function AscensionMod.a12:RangeDown()
+    AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.2
+    AscensionMod:AddStats(statsID.RANGE, 5)
 end
 
 
