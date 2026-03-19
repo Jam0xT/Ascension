@@ -738,6 +738,7 @@ function AscensionMod:NewRunReset()
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
 
+    AscensionMod.a1:Init()
     AscensionMod.a2:Init()
 end
 
@@ -1877,6 +1878,10 @@ AscensionMod.a1 = {
     ANTI_DEVOLVE_CHANCE = 0.5
 }
 
+function AscensionMod.a1:Init()
+    AscensionMod.a1.antiDevolveRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+end
+
 function AscensionMod.a1:MakeChampion()
     if AscensionMod.ascensionLevel < 1 then return end
     local entities = Isaac.GetRoomEntities()
@@ -1907,7 +1912,7 @@ function AscensionMod.a1:AntiDevolve()
     if AscensionMod.ascensionLevel < 1 then
         return
     end
-    if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
+    if AscensionMod.a1.antiDevolveRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
         return true
     end
 end
