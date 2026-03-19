@@ -740,6 +740,7 @@ function AscensionMod:NewRunReset()
 
     AscensionMod.a1:Init()
     AscensionMod.a2:Init()
+    AscensionMod.a4:Init()
 end
 
 function AscensionMod:OnFirstStageOptionConfirm()
@@ -1951,8 +1952,8 @@ function AscensionMod.a2:DowngradePickup()
 
         if eVariant == PickupVariant.PICKUP_HEART then
             local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
-            if data.triedDowngrade then goto continue end
-            data.triedDowngrade = true
+            if data["a2.triedDowngrade"] then goto continue end
+            data["a2.triedDowngrade"] = true
             if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
                 local downgradedSubType = AscensionMod.a2.HEART_DOWNGRADE[eSubType]
                 if downgradedSubType == nil then goto continue end
@@ -1962,8 +1963,8 @@ function AscensionMod.a2:DowngradePickup()
         elseif eVariant == PickupVariant.PICKUP_BOMB then
             if eSubType ~= BombSubType.BOMB_DOUBLEPACK then goto continue end
             local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
-            if data.triedDowngrade then goto continue end
-            data.triedDowngrade = true
+            if data["a2.triedDowngrade"] then goto continue end
+            data["a2.triedDowngrade"] = true
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
                 local downgradedSubType = BombSubType.BOMB_NORMAL
                 ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
@@ -1971,8 +1972,8 @@ function AscensionMod.a2:DowngradePickup()
         elseif eVariant == PickupVariant.PICKUP_KEY then
             if eSubType ~= KeySubType.KEY_DOUBLEPACK then goto continue end
             local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
-            if data.triedDowngrade then goto continue end
-            data.triedDowngrade = true
+            if data["a2.triedDowngrade"] then goto continue end
+            data["a2.triedDowngrade"] = true
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
                 local downgradedSubType = KeySubType.KEY_NORMAL
                 ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
@@ -1980,8 +1981,8 @@ function AscensionMod.a2:DowngradePickup()
         elseif eVariant == PickupVariant.PICKUP_COIN then
             if eSubType ~= CoinSubType.COIN_DOUBLEPACK then goto continue end
             local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
-            if data.triedDowngrade then goto continue end
-            data.triedDowngrade = true
+            if data["a2.triedDowngrade"] then goto continue end
+            data["a2.triedDowngrade"] = true
             if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
                 local downgradedSubType = CoinSubType.COIN_PENNY
                 ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
@@ -2089,38 +2090,49 @@ end
 
 AscensionMod.a4 = {
     SS_SPECIAL = {[0] = true, [1] = true, [6] = true, [12] = true, [13] = true, [16] = true},
-    SS_BLUE_FLY_CHANCE = 0.8,
+    SS_ROT_CHANCE = 0.8,
     RED_HEART_ROT_CHANCE = 0.3,
+    ROTTEN_COLLECTIBLE = {
+        [210] = 480,
+        [218] = 26,
+    },
+    KEEPER_SPAWN_HEART_VELOCITY_LENGTH = 5,
+    KEEPER_THROW_SPIDER_DIST = 160,
+    KEEPER_THROW_SPIDER_Y_OFFSET = 1,
 }
 
+function AscensionMod.a4:Init()
+    AscensionMod.a4.rotRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+    AscensionMod.a4.SSRotRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+end
+
 function AscensionMod.a4:RotHeart()
-    if AscensionMod.ascensionLevel < 4 then
-        return
-    end
+    if AscensionMod.ascensionLevel < 4 then return end
     local entities = Isaac.GetRoomEntities()
     for _, ent in pairs(entities) do
         if ent == nil then goto continue end
         if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
         if ent.Variant ~= PickupVariant.PICKUP_HEART then goto continue end
-        if ent.FrameCount ~= 1 then goto continue end
 
         local level = game:GetLevel()
         local roomData = level:GetCurrentRoomDesc().Data
         local rType = roomData.Type
         local rVariant = roomData.Variant
-        if rType == RoomType.ROOM_SUPERSECRET then
-            if AscensionMod.a4.SS_SPECIAL[rVariant] then
-                if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
-                    Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_FLY, 2, ent.Position, Vector.Zero, nil)
-                    ent:Remove()
-                    goto continue
-                end
-            end
-        end
-        if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
-            if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
-                AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0, ent.Position)
+        if rType == RoomType.ROOM_PLANETARIUM then goto continue end
+        if rType == RoomType.ROOM_SUPERSECRET and AscensionMod.a4.SS_SPECIAL[rVariant] then
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data['a4.triedRot'] then goto continue end
+            data['a4.triedRot'] = true
+            if AscensionMod.a4.SSRotRNG:RandomFloat() < AscensionMod.a4.SS_ROT_CHANCE then
+                Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_FLY, 2, ent.Position, Vector.Zero, nil)
                 ent:Remove()
+            end
+        elseif ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data['a4.triedRot'] then goto continue end
+            data['a4.triedRot'] = true
+            if AscensionMod.a4.rotRNG:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
+                ent:ToPickup():Morph(ent.Type, ent.Variant, HeartSubType.HEART_ROTTEN, true, true, false)
             end
         end
         ::continue::
@@ -2128,6 +2140,28 @@ function AscensionMod.a4:RotHeart()
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotHeart)
 
+function AscensionMod.a4:RotCollectible()
+    
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotCollectible)
+
+---@param ent Entity
+function AscensionMod.a4:RotKeeper(ent)
+    if AscensionMod.ascensionLevel < 4 then return end
+    if not ent then return end
+    if ent.Type ~= EntityType.ENTITY_SHOPKEEPER then return end
+    Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, 0,
+        ent.Position, RandomVector() * AscensionMod.a4.KEEPER_SPAWN_HEART_VELOCITY_LENGTH, nil)
+    for _ = 1, 2 do
+        EntityNPC.ThrowSpider(ent.Position, nil,
+            ent.Position + RandomVector() * AscensionMod.a4.KEEPER_THROW_SPIDER_DIST,
+            false, AscensionMod.a4.KEEPER_THROW_SPIDER_Y_OFFSET)
+    end
+    EntityNPC.ThrowSpider(ent.Position, nil,
+        ent.Position + RandomVector() * AscensionMod.a4.KEEPER_THROW_SPIDER_DIST,
+        true, AscensionMod.a4.KEEPER_THROW_SPIDER_Y_OFFSET)
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, AscensionMod.a4.RotKeeper)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------- 进阶 6 -----------------------------------------------------------------------
