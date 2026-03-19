@@ -7,12 +7,10 @@ AscensionMod.SaveManager.Init(AscensionMod)
 
 local game = Game()
 
-local SHIFT_INDEX = 35
-local seeds
-local startSeed
+local RNG_SHIFT_INDEX = 35
 ---@class RNG
-local rng
-local statsID = {
+local gameRNG
+AscensionMod.statID = {
     SPEED = 1,
     TEARS = 2,
     DMG = 3,
@@ -401,19 +399,19 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_DOUBLEPACK, 2, 0)
             end,
             ['2'] = function ()
-                AscensionMod:AddStats(statsID.SPEED, 0.10)
+                AscensionMod:AddStats(AscensionMod.statID.SPEED, 0.10)
             end,
             ['3'] = function ()
-                AscensionMod:AddStats(statsID.RANGE, 3)
+                AscensionMod:AddStats(AscensionMod.statID.RANGE, 3)
             end,
             ['4'] = function ()
-                AscensionMod:AddStats(statsID.SHOTSPEED, 0.5)
+                AscensionMod:AddStats(AscensionMod.statID.SHOTSPEED, 0.5)
             end,
             ['5'] = function ()
-                AscensionMod:AddStats(statsID.SHOTSPEED, -0.3)
+                AscensionMod:AddStats(AscensionMod.statID.SHOTSPEED, -0.3)
             end,
             ['6'] = function ()
-                AscensionMod:AddStats(statsID.LUCK, 1)
+                AscensionMod:AddStats(AscensionMod.statID.LUCK, 1)
             end,
             ['7'] = function ()
                 AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, HeartSubType.HEART_SOUL, 1, 0)
@@ -441,10 +439,10 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, KeySubType.KEY_GOLDEN, 2, 0)
             end,
             ['3'] = function ()
-                AscensionMod:AddStats(statsID.LUCK, 3)
+                AscensionMod:AddStats(AscensionMod.statID.LUCK, 3)
             end,
             ['4'] = function ()
-                AscensionMod:AddStats(statsID.SPEED, 0.2)
+                AscensionMod:AddStats(AscensionMod.statID.SPEED, 0.2)
             end,
             ['5'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -508,10 +506,10 @@ AscensionMod.NPCOptionEvents = {
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_COIN, 0, 5, 1)
             end,
             ['4'] = function ()
-                AscensionMod:AddStats(statsID.DMG, 0.4)
+                AscensionMod:AddStats(AscensionMod.statID.DMG, 0.4)
             end,
             ['5'] = function ()
-                AscensionMod:AddStats(statsID.TEARS, 0.3)
+                AscensionMod:AddStats(AscensionMod.statID.TEARS, 0.3)
             end,
             ['6'] = function ()
                 AscensionMod:SpawnPickup(PickupVariant.PICKUP_BOMB, BombSubType.BOMB_TROLL, 10, 1)
@@ -578,7 +576,7 @@ AscensionMod.NPCOptionEvents = {
             end,
             ['6'] = function ()
                 local p0 = game:GetPlayer(0)
-                AscensionMod:AddStats(statsID.RANGE, -(p0.TearRange / 40) / 3 * 2)
+                AscensionMod:AddStats(AscensionMod.statID.RANGE, -(p0.TearRange / 40) / 3 * 2)
             end,
             ['7'] = function ()
                 local p0 = game:GetPlayer(0)
@@ -706,9 +704,9 @@ AscensionMod.NPCDialogueColor = {
 
 local EXTRA_BOMB_ON_START = 3
 function AscensionMod:NewRunReset()
-    seeds = game:GetSeeds()
-    startSeed = seeds:GetStartSeed()
-    rng = RNG(startSeed, SHIFT_INDEX)
+    local seeds = game:GetSeeds()
+    AscensionMod.startSeed = seeds:GetStartSeed()
+    gameRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
 
     scheduler:clear()
 
@@ -741,6 +739,8 @@ function AscensionMod:NewRunReset()
             EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
+
+    AscensionMod.a2:Init()
 end
 
 function AscensionMod:OnFirstStageOptionConfirm()
@@ -789,7 +789,7 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewSt
 ---@return string NPCID id of the chosen npc
 function AscensionMod:GetNPC()
     local legitNPCIDList = AscensionMod:GetLegitNPCs()
-    return legitNPCIDList[rng:RandomInt(#legitNPCIDList - 1) + 1]
+    return legitNPCIDList[gameRNG:RandomInt(#legitNPCIDList - 1) + 1]
 end
 
 function AscensionMod:GetLegitNPCs()
@@ -820,7 +820,7 @@ function AscensionMod:GetDialogue(NPCID)
 
     AscensionMod.FoundPoopLastRun = false
 
-    return legitDialogueList[rng:RandomInt(#legitDialogueList - 1) + 1]
+    return legitDialogueList[gameRNG:RandomInt(#legitDialogueList - 1) + 1]
 end
 
 
@@ -882,8 +882,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsABCnt = #legitOptionABIDs
-    local optionA = rng:RandomInt(optionsABCnt) + 1
-    local optionB = rng:RandomInt(optionsABCnt - 1) + 1
+    local optionA = gameRNG:RandomInt(optionsABCnt) + 1
+    local optionB = gameRNG:RandomInt(optionsABCnt - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
@@ -918,8 +918,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD1Cnt = #legitOptionCD1IDs
-    local optionC1 = rng:RandomInt(optionsCD1Cnt) + 1
-    local optionD1 = rng:RandomInt(optionsCD1Cnt - 1) + 1
+    local optionC1 = gameRNG:RandomInt(optionsCD1Cnt) + 1
+    local optionD1 = gameRNG:RandomInt(optionsCD1Cnt - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
@@ -954,8 +954,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD2Cnt = #legitOptionsCD2
-    local optionC2 = rng:RandomInt(optionsCD2Cnt) + 1
-    local optionD2 = rng:RandomInt(optionsCD2Cnt - 1) + 1
+    local optionC2 = gameRNG:RandomInt(optionsCD2Cnt) + 1
+    local optionD2 = gameRNG:RandomInt(optionsCD2Cnt - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
@@ -1628,10 +1628,16 @@ function AscensionMod:SpawnAt(eType, eVariant, eSubType, num, delay, pos)
     pos = pos or (game:GetPlayer(0).Position)
 
     if delay == 0 then
-        for _ = 1, num do
-            Isaac.Spawn(
+        if num == 1 then
+            return Isaac.Spawn(
                 eType, eVariant, eSubType,
                 pos, Vector.Zero, nil)
+        else
+            for _ = 1, num do
+                Isaac.Spawn(
+                    eType, eVariant, eSubType,
+                    pos, Vector.Zero, nil)
+            end
         end
     else
         scheduler:seq_n(function ()
@@ -1874,9 +1880,7 @@ AscensionMod.a1 = {
 }
 
 function AscensionMod.a1.MakeChampion()
-    if AscensionMod.ascensionLevel < 1 then
-        return
-    end
+    if AscensionMod.ascensionLevel < 1 then return end
     local entities = Isaac.GetRoomEntities()
     for _, ent in pairs(entities) do
         if ent == nil then goto continue end
@@ -1886,8 +1890,8 @@ function AscensionMod.a1.MakeChampion()
         if npc == nil then goto continue end
         if npc:IsChampion() then goto continue end
         if npc:IsBoss() then goto continue end
-        if rng:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
-            ent:ToNPC():MakeChampion(rng:GetSeed())
+        if gameRNG:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
+            ent:ToNPC():MakeChampion(gameRNG:GetSeed())
         end
         ::continue::
     end
@@ -1898,7 +1902,7 @@ function AscensionMod.a1.AntiDevolve()
     if AscensionMod.ascensionLevel < 1 then
         return
     end
-    if rng:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
+    if gameRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
         return true
     end
 end
@@ -1925,34 +1929,65 @@ AscensionMod.a2 = {
     keyCntLastFrame = -1,
 }
 
-function AscensionMod.a2:DowngradePickup(eType, eVariant, eSubType, _, _, _, seed)
+function AscensionMod.a2:Init()
+    AscensionMod.a2.downgradeRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+end
+
+function AscensionMod.a2:DowngradePickup()
     if AscensionMod.ascensionLevel < 2 then return end
-    if eType ~= EntityType.ENTITY_PICKUP then return end
-    if eVariant == PickupVariant.PICKUP_HEART then
-        print('try downgrade')
-        if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
-            local downgradedSubtype = AscensionMod.a2.HEART_DOWNGRADE[eSubType]
-            return { eType, eVariant, downgradedSubtype, seed }
+    local entities = Isaac.GetRoomEntities()
+    local rng = AscensionMod.a2.downgradeRNG
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+
+        local eType = ent.Type
+        if eType ~= EntityType.ENTITY_PICKUP then goto continue end
+
+        local eVariant = ent.Variant
+        local eSubType = ent.SubType
+
+        if eVariant == PickupVariant.PICKUP_HEART then
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data.triedDowngrade then goto continue end
+            data.triedDowngrade = true
+            if rng:RandomFloat() < AscensionMod.a2.HEART_DOWNGRADE_CHANCE then
+                local downgradedSubType = AscensionMod.a2.HEART_DOWNGRADE[eSubType]
+                if downgradedSubType == nil then goto continue end
+                ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
+                -- set keepSeed to true to preserve saved data in the SaveManager
+            end
+        elseif eVariant == PickupVariant.PICKUP_BOMB then
+            if eSubType ~= BombSubType.BOMB_DOUBLEPACK then goto continue end
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data.triedDowngrade then goto continue end
+            data.triedDowngrade = true
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                local downgradedSubType = BombSubType.BOMB_NORMAL
+                ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
+            end
+        elseif eVariant == PickupVariant.PICKUP_KEY then
+            if eSubType ~= KeySubType.KEY_DOUBLEPACK then goto continue end
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data.triedDowngrade then goto continue end
+            data.triedDowngrade = true
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                local downgradedSubType = KeySubType.KEY_NORMAL
+                ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
+            end
+        elseif eVariant == PickupVariant.PICKUP_COIN then
+            if eSubType ~= CoinSubType.COIN_DOUBLEPACK then goto continue end
+            local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+            if data.triedDowngrade then goto continue end
+            data.triedDowngrade = true
+            if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
+                local downgradedSubType = CoinSubType.COIN_PENNY
+                ent:ToPickup():Morph(eType, eVariant, downgradedSubType, true, true, false)
+            end
         end
-    elseif eVariant == PickupVariant.PICKUP_COIN then
-        if eSubType ~= CoinSubType.COIN_DOUBLEPACK then return end
-        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-            return { eType, eVariant, CoinSubType.COIN_PENNY, seed }
-        end
-    elseif eVariant == PickupVariant.PICKUP_BOMB then
-        if eSubType ~= BombSubType.BOMB_DOUBLEPACK then return end
-        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-            return { eType, eVariant, BombSubType.BOMB_NORMAL, seed }
-        end
-    elseif eVariant == PickupVariant.PICKUP_KEY then
-        if eSubType ~= KeySubType.KEY_DOUBLEPACK then return end
-        if rng:RandomFloat() < AscensionMod.a2.DOUBLEPACK_DOWNGRADE_CHANCE then
-            print('downgrade key ring')
-            return { eType, eVariant, KeySubType.KEY_NORMAL, seed }
-        end
+        ::continue::
     end
 end
-AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_SPAWN, AscensionMod.a2.DowngradePickup)
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.DowngradePickup)
 
 ---@param entPickup EntityPickup
 function AscensionMod.a2:CountGoldenPickup(entPickup)
@@ -1989,7 +2024,7 @@ function AscensionMod.a2:CheckGoldenPickup()
     if AscensionMod.statusLevel.goldenBomb > 0 then
         if bombCntThisFrame == AscensionMod.a2.bombCntLastFrame - 1 then
             p0:AddBombs(1)
-            if rng:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+            if gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
                 AscensionMod.statusLevel.goldenBomb = AscensionMod.statusLevel.goldenBomb - 1
             end
         end
@@ -1997,7 +2032,7 @@ function AscensionMod.a2:CheckGoldenPickup()
     if AscensionMod.statusLevel.goldenKey > 0 then
         if keyCntThisFrame == AscensionMod.a2.keyCntLastFrame - 1 then
             p0:AddKeys(1)
-            if rng:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+            if gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
                 AscensionMod.statusLevel.goldenKey = AscensionMod.statusLevel.goldenKey - 1
             end
         end
@@ -2022,7 +2057,7 @@ function AscensionMod.a3:Start()
     local p0 = game:GetPlayer(0)
     local pType = p0:GetPlayerType()
     if pType == PlayerType.PLAYER_KEEPER or pType == PlayerType.PLAYER_KEEPER_B then
-        AscensionMod:AddStats(statsID.LUCK, -1)
+        AscensionMod:AddStats(AscensionMod.statID.LUCK, -1)
         return
     end
     if pType == PlayerType.PLAYER_THEFORGOTTEN then
@@ -2036,7 +2071,7 @@ function AscensionMod.a3:Start()
     end
     p0:AddBrokenHearts(8)
     if pType == PlayerType.PLAYER_THELOST or pType == PlayerType.PLAYER_THELOST_B then
-        AscensionMod:AddStats(statsID.LUCK, -1)
+        AscensionMod:AddStats(AscensionMod.statID.LUCK, -1)
     end
 end
 
@@ -2069,7 +2104,7 @@ function AscensionMod.a4:RotHeart()
         local rVariant = roomData.Variant
         if rType == RoomType.ROOM_SUPERSECRET then
             if AscensionMod.a4.SS_SPECIAL[rVariant] then
-                if rng:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
+                if gameRNG:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
                     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_FLY, 2, ent.Position, Vector.Zero, nil)
                     ent:Remove()
                     goto continue
@@ -2077,7 +2112,7 @@ function AscensionMod.a4:RotHeart()
             end
         end
         if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
-            if rng:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
+            if gameRNG:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
                 AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0, ent.Position)
                 ent:Remove()
             end
@@ -2152,7 +2187,7 @@ end
 
 function AscensionMod.a12:RangeDown()
     AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.2
-    AscensionMod:AddStats(statsID.RANGE, 5)
+    AscensionMod:AddStats(AscensionMod.statID.RANGE, 5)
 end
 
 
@@ -2180,13 +2215,13 @@ AscensionMod.statusEventFn = {
     malaise = function ()
         local x = AscensionMod.statusLevel.malaise - 1
         local n = AscensionMod.stageCnt
-        AscensionMod:AddStats(statsID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
-        AscensionMod:AddStats(statsID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
+        AscensionMod:AddStats(AscensionMod.statID.DMG, -(0.3 + 0.05 * n - math.min(x, 3) * 0.1))
+        AscensionMod:AddStats(AscensionMod.statID.TEARS, -(0.2 + 0.03 * n - math.min(x, 2) * 0.1))
     end,
     weakness = function ()
         local x = AscensionMod.statusLevel.weakness - 1
         local n = AscensionMod.stageCnt
-        AscensionMod:AddStats(statsID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
+        AscensionMod:AddStats(AscensionMod.statID.DMG, -(0.5 + 0.1 * n - math.min(x, 2) * 0.2))
     end,
     luck = function ()
         local x = AscensionMod.statusLevel.luck - 1
@@ -2203,7 +2238,7 @@ AscensionMod.statusEventFn = {
     strength = function ()
         local x = AscensionMod.statusLevel.strength - 1
         local n = AscensionMod.stageCnt
-        AscensionMod:AddStats(statsID.DMG, (1.15 - x * 0.05) ^ n)
+        AscensionMod:AddStats(AscensionMod.statID.DMG, (1.15 - x * 0.05) ^ n)
     end,
     corruption = function ()
         AscensionMod:SpawnPickup(PickupVariant.PICKUP_HEART, HeartSubType.HEART_BLACK, 1, 0)
