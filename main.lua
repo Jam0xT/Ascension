@@ -1760,23 +1760,16 @@ end
 
 
 AscensionMod.FoundPoopLastRun = false -- 用于开局对话
-function AscensionMod:LookForPoop(entityType, _, _, gridIndex, _)
-    if AscensionMod.FoundPoopLastRun then
-        return
-    end
-    if entityType >= 1000 then -- 1000+ is grid entity because of reasons
-        local room = game:GetRoom()
-        scheduler:once(function()
-            local gridEntity = room:GetGridEntityFromPos(room:GetGridPosition(gridIndex))
-            if gridEntity ~= nil then
-                if gridEntity:GetType() == GridEntityType.GRID_POOP then
-                    AscensionMod.FoundPoopLastRun = true
-                end
-            end
-        end, 1)
+
+function AscensionMod:LookForPoop()
+    if AscensionMod.FoundPoopLastRun then return end
+    local level = game:GetLevel()
+    local poopCnt = level:GetCurrentRoomDesc().PoopCount
+    if poopCnt > 0 then
+        AscensionMod.FoundPoopLastRun = true
     end
 end
-AscensionMod:AddCallback(ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN, AscensionMod.LookForPoop)
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, AscensionMod.LookForPoop)
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
