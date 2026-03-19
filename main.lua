@@ -701,10 +701,15 @@ AscensionMod.NPCDialogueColor = {
 
 
 local EXTRA_BOMB_ON_START = 3
+AscensionMod.controllerID = 0
 function AscensionMod:NewRunReset()
+    local p0 = game:GetPlayer(0)
+
     local seeds = game:GetSeeds()
     AscensionMod.startSeed = seeds:GetStartSeed()
     AscensionMod.gameRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+
+    AscensionMod.controllerID = p0.ControllerIndex
 
     scheduler:clear()
 
@@ -730,7 +735,6 @@ function AscensionMod:NewRunReset()
 
     AscensionMod:ResetStatusLevels()
 
-    local p0 = game:GetPlayer(0)
     p0:AddBombs(EXTRA_BOMB_ON_START)
     AscensionMod:ExtraHolyCardIfTLost()
 
@@ -781,7 +785,7 @@ function AscensionMod:StartNewStage()
     AscensionMod:SpawnStatue(AscensionMod.NPCID)
 
     AscensionMod:DisablePlayerControls()
-    AscensionMod:HidePlayer()
+    -- AscensionMod:HidePlayer()
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewStage)
 
@@ -1291,7 +1295,7 @@ function AscensionMod:SwitchControledField(entity, _, _)
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
         return
     end
-    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, AscensionMod.controllerID) then
         if actionLeftReleased then
             actionLeftReleased = false
             AscensionMod.controledField = AscensionMod.PrevControledField[AscensionMod.controledField]
@@ -1299,7 +1303,7 @@ function AscensionMod:SwitchControledField(entity, _, _)
     else
         actionLeftReleased = true
     end
-    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, AscensionMod.controllerID) then
         if actionRightReleased then
             actionRightReleased = false
             AscensionMod.controledField = AscensionMod.NextControledField[AscensionMod.controledField]
@@ -1340,7 +1344,7 @@ function AscensionMod:SwitchAscensionLevel(entity, _, _)
         maxAscensionLevel = maxSavedAscensionLevel
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, AscensionMod.controllerID) then
         if actionDownReleased then
             actionDownReleased = false
             if AscensionMod.ascensionLevel < maxAscensionLevel then
@@ -1353,7 +1357,7 @@ function AscensionMod:SwitchAscensionLevel(entity, _, _)
         actionDownReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, AscensionMod.controllerID) then
         if actionUpReleased then
             actionUpReleased = false
             if AscensionMod.ascensionLevel > 0 then
@@ -1366,7 +1370,7 @@ function AscensionMod:SwitchAscensionLevel(entity, _, _)
         actionUpReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, AscensionMod.controllerID) then
         if actionConfirmReleased then
             actionConfirmReleased = false
             AscensionMod:ConfirmSeletedOption()
@@ -1391,7 +1395,7 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
     if entity == nil or entity.Type ~= EntityType.ENTITY_PLAYER then
         return
     end
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUDOWN, AscensionMod.controllerID) then
         if actionDownReleased then
             actionDownReleased = false
             AscensionMod.SelectedOption = AscensionMod.NextOption[AscensionMod.SelectedOption]
@@ -1400,7 +1404,7 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
         actionDownReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_MENUUP, AscensionMod.controllerID) then
         if actionUpReleased then
             actionUpReleased = false
             AscensionMod.SelectedOption = AscensionMod.PrevOption[AscensionMod.SelectedOption]
@@ -1409,7 +1413,7 @@ function AscensionMod:SwitchSeletedOption(entity, _, _)
         actionUpReleased = true
     end
 
-    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, 0) then
+    if Input.IsActionPressed(ButtonAction.ACTION_BOMB, AscensionMod.controllerID) then
         if actionConfirmReleased then
             actionConfirmReleased = false
             AscensionMod:ConfirmSeletedOption()
@@ -1456,7 +1460,7 @@ function AscensionMod:ConfirmSeletedOption()
             if eventFn ~= nil then eventFn() else if AscensionMod.debug then print('Error: No event function found for: '..tostring(optionID)) end end
         end
 
-        AscensionMod:ShowPlayer()
+        -- AscensionMod:ShowPlayer()
         AscensionMod:RemoveStatue(NPCID)
 
         scheduler:once(function ()
@@ -1566,7 +1570,31 @@ function AscensionMod:ShowPlayer()
     end
 end
 
+local noInput = false
+function AscensionMod:NoInput(ent, inputHook, buttonAction)
+    if not noInput then return end
+    if ent == nil then return end
+    if ent.Type ~= EntityType.ENTITY_PLAYER then return end
+    if buttonAction == ButtonAction.ACTION_UP or
+        buttonAction == ButtonAction.ACTION_DOWN or
+        buttonAction == ButtonAction.ACTION_LEFT or
+        buttonAction == ButtonAction.ACTION_RIGHT or
+        buttonAction == ButtonAction.ACTION_SHOOTUP or
+        buttonAction == ButtonAction.ACTION_SHOOTDOWN or
+        buttonAction == ButtonAction.ACTION_SHOOTLEFT or
+        buttonAction == ButtonAction.ACTION_SHOOTRIGHT or
+        buttonAction == ButtonAction.ACTION_BOMB then
+        if inputHook == InputHook.GET_ACTION_VALUE then
+            return 0
+        else
+            return false
+        end
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_INPUT_ACTION, AscensionMod.NoInput)
+
 function AscensionMod:DisablePlayerControls()
+    noInput = true
     for i = 0, game:GetNumPlayers() do
         local player = game:GetPlayer(i)
         player.ControlsCooldown = 999999999
@@ -1574,6 +1602,7 @@ function AscensionMod:DisablePlayerControls()
 end
 
 function AscensionMod:EnablePlayerControls()
+    noInput = false
     for i = 0, game:GetNumPlayers() do
         local player = game:GetPlayer(i)
         player.ControlsCooldown = 0
@@ -2206,12 +2235,11 @@ function AscensionMod.a6:Backstab(player, isDoubled)
     local doubleMul = 1
     if isDoubled then doubleMul = 2 end
     local hp = player:GetHearts() / 2 + player:GetSoulHearts() / 2
-    print(hp)
-    local dmgFlags = DamageFlag.DAMAGE_NO_PENALTIES | DamageFlag.DAMAGE_NO_MODIFIERS | DamageFlag.DAMAGE_INVINCIBLE
-    if hp >= 3 then
-        player:TakeDamage(2 * doubleMul, dmgFlags, EntityRef(player), 0)
-    elseif hp >= 2 then
-        player:TakeDamage(1 * doubleMul, dmgFlags, EntityRef(player), 0)
+    local dmgFlags = DamageFlag.DAMAGE_NO_PENALTIES | DamageFlag.DAMAGE_INVINCIBLE | DamageFlag.DAMAGE_NO_MODIFIERS
+    if hp >= 2.99 then
+        player:TakeDamage(2 * doubleMul, dmgFlags, EntityRef(nil), 0)
+    elseif hp >= 1.99 then
+        player:TakeDamage(1 * doubleMul, dmgFlags, EntityRef(nil), 0)
     end
 end
 
