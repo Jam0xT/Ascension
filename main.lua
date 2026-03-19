@@ -2057,28 +2057,31 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a2.CheckGolde
 
 AscensionMod.a3 = {
     STARTING_BROKEN_HEARTS = 8,
+    THE_FORGOTTEN_STARTING_BROKEN_HEARTS = 4,
+    KEEPER_STARTING_LUCK = -1, -- including t. keeper
+    LOST_STARTING_LUCK = -4, -- same as above
 }
 
 function AscensionMod.a3:Start()
     if AscensionMod.ascensionLevel < 3 then return end
     local p0 = game:GetPlayer(0)
-    local pType = p0:GetPlayerType()
+    local pType = p0:GetMainTwin():GetPlayerType()
+
     if pType == PlayerType.PLAYER_KEEPER or pType == PlayerType.PLAYER_KEEPER_B then
-        AscensionMod:AddStats(AscensionMod.statID.LUCK, -1)
+        AscensionMod:AddStats(AscensionMod.statID.LUCK, AscensionMod.a3.KEEPER_STARTING_LUCK)
+    elseif pType == PlayerType.PLAYER_THEFORGOTTEN then
+        p0:AddBrokenHearts(AscensionMod.a3.THE_FORGOTTEN_STARTING_BROKEN_HEARTS)
         return
-    end
-    if pType == PlayerType.PLAYER_THEFORGOTTEN then
-        p0:AddBrokenHearts(4)
+    elseif pType == PlayerType.PLAYER_JACOB then
+        p0:AddBrokenHearts(AscensionMod.a3.STARTING_BROKEN_HEARTS)
+        p0:GetOtherTwin():AddBrokenHearts(AscensionMod.a3.STARTING_BROKEN_HEARTS)
         return
+    else
+        p0:AddBrokenHearts(AscensionMod.a3.STARTING_BROKEN_HEARTS)
     end
-    if pType == PlayerType.PLAYER_JACOB or pType == PlayerType.PLAYER_ESAU then
-        p0:GetMainTwin():AddBrokenHearts(8)
-        p0:GetOtherTwin():AddBrokenHearts(8)
-        return
-    end
-    p0:AddBrokenHearts(8)
+
     if pType == PlayerType.PLAYER_THELOST or pType == PlayerType.PLAYER_THELOST_B then
-        AscensionMod:AddStats(AscensionMod.statID.LUCK, -1)
+        AscensionMod:AddStats(AscensionMod.statID.LUCK, AscensionMod.a3.LOST_STARTING_LUCK)
     end
 end
 
@@ -2184,20 +2187,26 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, AscensionMod.a4.RotKe
 AscensionMod.a6 = {}
 
 function AscensionMod.a6:Start()
-    AscensionMod.a6:Backstab()
+    if AscensionMod.ascensionLevel < 6 then return end
+    local p0 = game:GetPlayer(0)
+    if p0:GetMainTwin():GetPlayerType() == PlayerType.PLAYER_JACOB then
+        AscensionMod.a6:Backstab(p0:GetMainTwin(), true)
+    else
+        AscensionMod.a6:Backstab(p0, false)
+    end
 end
 
-function AscensionMod.a6:Backstab()
-    if AscensionMod.ascensionLevel < 6 then
-        return
-    end
-    local p0 = game:GetPlayer(0)
-    local hp = p0:GetHearts() / 2 + p0:GetSoulHearts() / 2
-    local dmgFlags = DamageFlag.DAMAGE_NO_PENALTIES | DamageFlag.DAMAGE_NO_MODIFIERS
+function AscensionMod.a6:Backstab(player, isDoubled)
+    isDoubled = isDoubled or false
+    local doubleMul = 1
+    if isDoubled then doubleMul = 2 end
+    local hp = player:GetHearts() / 2 + player:GetSoulHearts() / 2
+    print(hp)
+    local dmgFlags = DamageFlag.DAMAGE_NO_PENALTIES | DamageFlag.DAMAGE_NO_MODIFIERS | DamageFlag.DAMAGE_INVINCIBLE
     if hp >= 3 then
-        p0:TakeDamage(2, dmgFlags, EntityRef(p0), 0)
+        player:TakeDamage(2 * doubleMul, dmgFlags, EntityRef(player), 0)
     elseif hp >= 2 then
-        p0:TakeDamage(1, dmgFlags, EntityRef(p0), 0)
+        player:TakeDamage(1 * doubleMul, dmgFlags, EntityRef(player), 0)
     end
 end
 
