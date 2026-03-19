@@ -2024,13 +2024,16 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, AscensionMod.a2.C
 
 function AscensionMod.a2:CheckGoldenPickup()
     if AscensionMod.ascensionLevel < 2 then return end
-    if AscensionMod.a9.lostPickupThisFrame then
-        AscensionMod.a9.lostPickupThisFrame = false
-        return
-    end
+    if AscensionMod.a9.losingPickup then return end
     local p0 = game:GetPlayer(0)
     local bombCntThisFrame = p0:GetNumBombs()
     local keyCntThisFrame = p0:GetNumKeys()
+    if AscensionMod.a9.lostPickupThisFrame then
+        AscensionMod.a2.bombCntLastFrame = bombCntThisFrame
+        AscensionMod.a2.keyCntLastFrame = keyCntThisFrame
+        AscensionMod.a9.lostPickupThisFrame = false
+        return
+    end
     if AscensionMod.statusLevel.goldenBomb > 0 then
         if bombCntThisFrame == AscensionMod.a2.bombCntLastFrame - 1 then
             p0:AddBombs(1)
@@ -2168,18 +2171,28 @@ AscensionMod.a9 = {
     KEEP_BOMB = 0.5,
     KEEP_KEY = 0.2,
     KEEP_COIN = 0.5,
+    losingPickup = false,
     lostPickupThisFrame = false,
 }
 
 function AscensionMod.a9:LosePickup()
     if AscensionMod.ascensionLevel < 9 then return end
+    if AscensionMod:IsFirstStage() then return end
     local p0 = game:GetPlayer(0)
+
+    AscensionMod.a9.losingPickup = true
+
     local bombs = p0:GetNumBombs()
+    p0:AddBombs(-99)
     p0:AddBombs(math.ceil(bombs * AscensionMod.a9.KEEP_BOMB))
     local keys = p0:GetNumKeys()
+    p0:AddKeys(-99)
     p0:AddKeys(math.ceil(keys * AscensionMod.a9.KEEP_KEY))
     local coins = p0:GetNumCoins()
+    p0:AddCoins(-999)
     p0:AddCoins(math.ceil(coins * AscensionMod.a9.KEEP_COIN))
+
+    AscensionMod.a9.losingPickup = false
     AscensionMod.a9.lostPickupThisFrame = true
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.a9.LosePickup)
