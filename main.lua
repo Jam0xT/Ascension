@@ -2119,6 +2119,7 @@ function AscensionMod.a4:RotHeart()
         local rType = roomData.Type
         local rVariant = roomData.Variant
         if rType == RoomType.ROOM_PLANETARIUM then goto continue end
+        if rType == RoomType.ROOM_ANGEL then goto continue end
         if rType == RoomType.ROOM_SUPERSECRET and AscensionMod.a4.SS_SPECIAL[rVariant] then
             local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
             if data['a4.triedRot'] then goto continue end
@@ -2141,7 +2142,19 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotHeart)
 
 function AscensionMod.a4:RotCollectible()
-    
+    if AscensionMod.ascensionLevel < 4 then return end
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+        if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
+        if ent.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then goto continue end
+
+        local rottenCType = AscensionMod.a4.ROTTEN_COLLECTIBLE[ent.SubType]
+        if rottenCType then
+            ent:ToPickup():Morph(ent.Type, ent.Variant, rottenCType, true, true, false)
+        end
+        ::continue::
+    end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a4.RotCollectible)
 
