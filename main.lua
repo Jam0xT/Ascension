@@ -732,15 +732,20 @@ function AscensionMod:NewRunReset()
 
     local p0 = game:GetPlayer(0)
     p0:AddBombs(EXTRA_BOMB_ON_START)
+    AscensionMod:ExtraHolyCardIfTLost()
+
+    AscensionMod.a1:Init()
+    AscensionMod.a2:Init()
+    AscensionMod.a4:Init()
+end
+
+function AscensionMod:ExtraHolyCardIfTLost()
+    local p0 = game:GetPlayer(0)
     if p0:GetPlayerType() == PlayerType.PLAYER_THELOST_B then
         Isaac.Spawn(
             EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_HOLY,
             Isaac.GetFreeNearPosition(p0.Position, 40), Vector.Zero, nil)
     end
-
-    AscensionMod.a1:Init()
-    AscensionMod.a2:Init()
-    AscensionMod.a4:Init()
 end
 
 function AscensionMod:OnFirstStageOptionConfirm()
