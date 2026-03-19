@@ -741,6 +741,7 @@ function AscensionMod:NewRunReset()
     AscensionMod.a1:Init()
     AscensionMod.a2:Init()
     AscensionMod.a4:Init()
+    AscensionMod.a5:Init()
 end
 
 function AscensionMod:ExtraHolyCardIfTLost()
@@ -2212,6 +2213,46 @@ function AscensionMod.a4:RotKeeper(ent)
         true, AscensionMod.a4.KEEPER_THROW_SPIDER_Y_OFFSET)
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, AscensionMod.a4.RotKeeper)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 5 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a5 = {
+    REROLL_CHANCE = {
+        [4] = 0.85,
+        [3] = 0.7
+    }
+}
+
+function AscensionMod.a5.Init()
+    AscensionMod.a5.rerollRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+end
+
+function AscensionMod.a5.Reroll()
+    if AscensionMod.ascensionLevel < 5 then return end
+    local entities = Isaac.GetRoomEntities()
+    for _, ent in pairs(entities) do
+        if ent == nil then goto continue end
+        if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
+        if ent.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then goto continue end
+
+        local q = Isaac.GetItemConfig():GetCollectible(ent.SubType).Quality
+        local rerollChance = AscensionMod.a5.REROLL_CHANCE[q]
+        if not rerollChance then goto continue end
+        local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
+        if data['a5.triedReroll'] then goto continue end
+        data['a5.triedReroll'] = true
+        if AscensionMod.a5.rerollRNG:RandomFloat() < rerollChance then
+            ent:ToPickup():Morph(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, 0, true, true, false)
+        end
+        ::continue::
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a5.Reroll)
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------- 进阶 6 -----------------------------------------------------------------------
