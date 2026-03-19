@@ -2328,6 +2328,7 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.a9.LosePic
 
 AscensionMod.a12 = {}
 function AscensionMod.a12:Start()
+    if AscensionMod.ascensionLevel < 12 then return end
     AscensionMod.a12:RangeDown()
 end
 
