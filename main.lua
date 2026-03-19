@@ -8,8 +8,6 @@ AscensionMod.SaveManager.Init(AscensionMod)
 local game = Game()
 
 local RNG_SHIFT_INDEX = 35
----@class RNG
-local gameRNG
 AscensionMod.statID = {
     SPEED = 1,
     TEARS = 2,
@@ -706,7 +704,7 @@ local EXTRA_BOMB_ON_START = 3
 function AscensionMod:NewRunReset()
     local seeds = game:GetSeeds()
     AscensionMod.startSeed = seeds:GetStartSeed()
-    gameRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+    AscensionMod.gameRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
 
     scheduler:clear()
 
@@ -789,7 +787,7 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.StartNewSt
 ---@return string NPCID id of the chosen npc
 function AscensionMod:GetNPC()
     local legitNPCIDList = AscensionMod:GetLegitNPCs()
-    return legitNPCIDList[gameRNG:RandomInt(#legitNPCIDList - 1) + 1]
+    return legitNPCIDList[AscensionMod.gameRNG:RandomInt(#legitNPCIDList - 1) + 1]
 end
 
 function AscensionMod:GetLegitNPCs()
@@ -820,7 +818,7 @@ function AscensionMod:GetDialogue(NPCID)
 
     AscensionMod.FoundPoopLastRun = false
 
-    return legitDialogueList[gameRNG:RandomInt(#legitDialogueList - 1) + 1]
+    return legitDialogueList[AscensionMod.gameRNG:RandomInt(#legitDialogueList - 1) + 1]
 end
 
 
@@ -882,8 +880,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsABCnt = #legitOptionABIDs
-    local optionA = gameRNG:RandomInt(optionsABCnt) + 1
-    local optionB = gameRNG:RandomInt(optionsABCnt - 1) + 1
+    local optionA = AscensionMod.gameRNG:RandomInt(optionsABCnt) + 1
+    local optionB = AscensionMod.gameRNG:RandomInt(optionsABCnt - 1) + 1
     if optionB >= optionA then
         optionB = optionB + 1
     end
@@ -918,8 +916,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD1Cnt = #legitOptionCD1IDs
-    local optionC1 = gameRNG:RandomInt(optionsCD1Cnt) + 1
-    local optionD1 = gameRNG:RandomInt(optionsCD1Cnt - 1) + 1
+    local optionC1 = AscensionMod.gameRNG:RandomInt(optionsCD1Cnt) + 1
+    local optionD1 = AscensionMod.gameRNG:RandomInt(optionsCD1Cnt - 1) + 1
     if optionD1 >= optionC1 then
         optionD1 = optionD1 + 1
     end
@@ -954,8 +952,8 @@ function AscensionMod:SetOptions(NPCID)
         end
     end
     local optionsCD2Cnt = #legitOptionsCD2
-    local optionC2 = gameRNG:RandomInt(optionsCD2Cnt) + 1
-    local optionD2 = gameRNG:RandomInt(optionsCD2Cnt - 1) + 1
+    local optionC2 = AscensionMod.gameRNG:RandomInt(optionsCD2Cnt) + 1
+    local optionD2 = AscensionMod.gameRNG:RandomInt(optionsCD2Cnt - 1) + 1
     if optionD2 >= optionC2 then
         optionD2 = optionD2 + 1
     end
@@ -1879,7 +1877,7 @@ AscensionMod.a1 = {
     ANTI_DEVOLVE_CHANCE = 0.5
 }
 
-function AscensionMod.a1.MakeChampion()
+function AscensionMod.a1:MakeChampion()
     if AscensionMod.ascensionLevel < 1 then return end
     local entities = Isaac.GetRoomEntities()
     for _, ent in pairs(entities) do
@@ -1890,19 +1888,26 @@ function AscensionMod.a1.MakeChampion()
         if npc == nil then goto continue end
         if npc:IsChampion() then goto continue end
         if npc:IsBoss() then goto continue end
-        if gameRNG:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
-            ent:ToNPC():MakeChampion(gameRNG:GetSeed())
+
+        local level = game:GetLevel()
+        local idx = level:GetCurrentRoomIndex()
+        local data = AscensionMod.SaveManager.GetRoomSave(nil, false, idx, false)
+        if not data.championRNGSeed then data.championRNGSeed = level:GetCurrentRoomDesc().SpawnSeed end
+        local rng = RNG(data.championRNGSeed, RNG_SHIFT_INDEX)
+        if rng:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
+            ent:ToNPC():MakeChampion(rng:GetSeed())
         end
+        data.championRNGSeed = rng:GetSeed()
         ::continue::
     end
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a1.MakeChampion)
 
-function AscensionMod.a1.AntiDevolve()
+function AscensionMod.a1:AntiDevolve()
     if AscensionMod.ascensionLevel < 1 then
         return
     end
-    if gameRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
+    if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
         return true
     end
 end
@@ -2024,7 +2029,7 @@ function AscensionMod.a2:CheckGoldenPickup()
     if AscensionMod.statusLevel.goldenBomb > 0 then
         if bombCntThisFrame == AscensionMod.a2.bombCntLastFrame - 1 then
             p0:AddBombs(1)
-            if gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+            if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
                 AscensionMod.statusLevel.goldenBomb = AscensionMod.statusLevel.goldenBomb - 1
             end
         end
@@ -2032,7 +2037,7 @@ function AscensionMod.a2:CheckGoldenPickup()
     if AscensionMod.statusLevel.goldenKey > 0 then
         if keyCntThisFrame == AscensionMod.a2.keyCntLastFrame - 1 then
             p0:AddKeys(1)
-            if gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
+            if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a2.GOLDEN_PICKUP_EXHAUST_CHANCE then
                 AscensionMod.statusLevel.goldenKey = AscensionMod.statusLevel.goldenKey - 1
             end
         end
@@ -2104,7 +2109,7 @@ function AscensionMod.a4:RotHeart()
         local rVariant = roomData.Variant
         if rType == RoomType.ROOM_SUPERSECRET then
             if AscensionMod.a4.SS_SPECIAL[rVariant] then
-                if gameRNG:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
+                if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a4.SS_BLUE_FLY_CHANCE then
                     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_FLY, 2, ent.Position, Vector.Zero, nil)
                     ent:Remove()
                     goto continue
@@ -2112,7 +2117,7 @@ function AscensionMod.a4:RotHeart()
             end
         end
         if ent.SubType == HeartSubType.HEART_FULL or ent.SubType == HeartSubType.HEART_HALF then
-            if gameRNG:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
+            if AscensionMod.gameRNG:RandomFloat() < AscensionMod.a4.RED_HEART_ROT_CHANCE then
                 AscensionMod:SpawnPickupAt(PickupVariant.PICKUP_HEART, HeartSubType.HEART_ROTTEN, 1, 0, ent.Position)
                 ent:Remove()
             end
