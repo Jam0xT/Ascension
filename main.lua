@@ -1917,7 +1917,7 @@ AscensionMod:AddCallback(ModCallbacks.MC_PRE_ENTITY_DEVOLVE, AscensionMod.a1.Ant
 AscensionMod.a2 = {
     HEART_DOWNGRADE_CHANCE = 0.9,
     HEART_DOWNGRADE = {
-        [HeartSubType.HEART_DOUBLEPACK] = HeartSubType.HEART_FULL,
+        [HeartSubType.HEART_DOUBLEPACK] = HeartSubType.HEART_SCARED,
         [HeartSubType.HEART_FULL] = HeartSubType.HEART_HALF,
         [HeartSubType.HEART_SOUL] = HeartSubType.HEART_HALF_SOUL,
         [HeartSubType.HEART_BLACK] = HeartSubType.HEART_SOUL,
