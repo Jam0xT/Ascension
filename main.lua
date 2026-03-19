@@ -2239,7 +2239,9 @@ function AscensionMod.a5.Reroll()
         if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
         if ent.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then goto continue end
 
-        local q = Isaac.GetItemConfig():GetCollectible(ent.SubType).Quality
+        local itemConfig = Isaac.GetItemConfig():GetCollectible(ent.SubType)
+        if not itemConfig then goto continue end
+        local q = itemConfig.Quality
         local rerollChance = AscensionMod.a5.REROLL_CHANCE[q]
         if not rerollChance then goto continue end
         local data = AscensionMod.SaveManager.GetNoRerollPickupSave(ent:ToPickup(), false)
