@@ -385,7 +385,7 @@ AscensionMod.NPCOptionsDesc = {
             ['4'] = '获得 1 层不幸',
             ['5'] = '获得 1 层灾厄', -- 随机超级陆夫人
             ['6'] = '失去 三分之二 射程',
-            ['7'] = '失去 2 颗心最大生命',
+            ['7'] = '失去 1 颗心最大生命',
         }
     }
 }
@@ -578,7 +578,7 @@ AscensionMod.NPCOptionEvents = {
             end,
             ['7'] = function ()
                 local p0 = game:GetPlayer(0)
-                p0:AddMaxHearts(-4, true)
+                p0:AddMaxHearts(-2, true)
             end,
         }
     },
@@ -677,9 +677,9 @@ AscensionMod.NPCOptionPredicates = {
                 local p0 = game:GetPlayer(0)
                 return (p0:GetNumKeys() >= 2 and p0:GetNumCoins() >= 20)
             end,
-            ['8'] = function ()
+            ['7'] = function ()
                 local p0 = game:GetPlayer(0)
-                return (not AscensionMod:KeeperOrLost()) and (p0:GetMaxHearts() >= 4)
+                return (not AscensionMod:KeeperOrLost()) and (p0:GetMaxHearts() >= 2)
             end
         }
     }
@@ -2238,6 +2238,7 @@ function AscensionMod.a5.Reroll()
         if ent == nil then goto continue end
         if ent.Type ~= EntityType.ENTITY_PICKUP then goto continue end
         if ent.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then goto continue end
+        if ent:ToPickup().Touched then goto continue end
 
         local itemConfig = Isaac.GetItemConfig():GetCollectible(ent.SubType)
         if not itemConfig then goto continue end
