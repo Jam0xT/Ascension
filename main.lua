@@ -1904,7 +1904,7 @@ end
 
 AscensionMod.a1 = {
     CHAMPION_CHANCE = 0.6,
-    ANTI_DEVOLVE_CHANCE = 0.5
+    ANTI_DEVOLVE_CHANCE = 0.2
 }
 
 function AscensionMod.a1:Init()
@@ -1918,17 +1918,33 @@ function AscensionMod.a1:MakeChampion()
         if ent == nil then goto continue end
         if not ent:IsActiveEnemy(false) then goto continue end
         if not (ent.FrameCount == 1) then goto continue end
+
         local npc = ent:ToNPC()
         if npc == nil then goto continue end
         if npc:IsChampion() then goto continue end
-        if npc:IsBoss() then goto continue end
+
+        local championChance
+        if AscensionMod.ascensionLevel >= 15 then
+            if npc:IsBoss() then
+                if AscensionMod.stageCnt >= AscensionMod.a15.STAGE_FIRST_CHAMPION_BOSS then
+                    championChance = AscensionMod.a15.CHAMPION_CHANCE_BOSS
+                else
+                    goto continue
+                end
+            else
+                championChance = AscensionMod.a15.CHAMPION_CHANCE
+            end
+        else
+            if npc:IsBoss() then goto continue end
+            championChance = AscensionMod.a1.CHAMPION_CHANCE
+        end
 
         local level = game:GetLevel()
         local idx = level:GetCurrentRoomIndex()
         local data = AscensionMod.SaveManager.GetRoomSave(nil, false, idx, false)
         if not data.championRNGSeed then data.championRNGSeed = level:GetCurrentRoomDesc().SpawnSeed end
         local rng = RNG(data.championRNGSeed, RNG_SHIFT_INDEX)
-        if rng:RandomFloat() < AscensionMod.a1.CHAMPION_CHANCE then
+        if rng:RandomFloat() < championChance then
             ent:ToNPC():MakeChampion(rng:GetSeed())
         end
         data.championRNGSeed = rng:GetSeed()
@@ -1938,10 +1954,12 @@ end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_UPDATE, AscensionMod.a1.MakeChampion)
 
 function AscensionMod.a1:AntiDevolve()
-    if AscensionMod.ascensionLevel < 1 then
-        return
+    if AscensionMod.ascensionLevel < 1 then return end
+    local chance = AscensionMod.a1.ANTI_DEVOLVE_CHANCE
+    if AscensionMod.ascensionLevel >= 15 then
+        chance = AscensionMod.a15.ANTI_DEVOLVE_CHANCE
     end
-    if AscensionMod.a1.antiDevolveRNG:RandomFloat() < AscensionMod.a1.ANTI_DEVOLVE_CHANCE then
+    if AscensionMod.a1.antiDevolveRNG:RandomFloat() < chance then
         return true
     end
 end
@@ -2223,15 +2241,15 @@ AscensionMod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, AscensionMod.a4.RotKe
 AscensionMod.a5 = {
     REROLL_CHANCE = {
         [4] = 0.85,
-        [3] = 0.7
+        [3] = 0.6
     }
 }
 
-function AscensionMod.a5.Init()
+function AscensionMod.a5:Init()
     AscensionMod.a5.rerollRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
 end
 
-function AscensionMod.a5.Reroll()
+function AscensionMod.a5:Reroll()
     if AscensionMod.ascensionLevel < 5 then return end
     local entities = Isaac.GetRoomEntities()
     for _, ent in pairs(entities) do
@@ -2339,6 +2357,19 @@ function AscensionMod.a12:RangeDown()
     AscensionMod.playerStats.rangeMul = AscensionMod.playerStats.rangeMul * 0.2
     AscensionMod:AddStats(AscensionMod.statID.RANGE, 5)
 end
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 15 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a15 = {
+    STAGE_FIRST_CHAMPION_BOSS = 3,
+    CHAMPION_CHANCE_BOSS = 1,
+    CHAMPION_CHANCE = 0.8,
+    ANTI_DEVOLVE_CHANCE = 0.5,
+}
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
