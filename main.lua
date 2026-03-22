@@ -742,6 +742,7 @@ function AscensionMod:NewRunReset()
     AscensionMod.a2:Init()
     AscensionMod.a4:Init()
     AscensionMod.a5:Init()
+    AscensionMod.a11:Init()
 end
 
 function AscensionMod:ExtraHolyCardIfTLost()
@@ -2362,6 +2363,112 @@ function AscensionMod.a9:LosePickup()
     AscensionMod.a9.lostPickupThisFrame = true
 end
 AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, AscensionMod.a9.LosePickup)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------- 进阶 11 -----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+AscensionMod.a11 = {
+    DISCHARGE_CHANGE = 10.15,
+    LASER_COUNT = 3,
+    LASER_DMG_MUL = 3,
+    LASER_HOMING = 1,
+}
+
+function AscensionMod.a11:Init()
+    AscensionMod.a11.dischargeRNG = RNG(AscensionMod.startSeed, RNG_SHIFT_INDEX)
+end
+
+function AscensionMod.a11:Zap()
+    if AscensionMod.ascensionLevel < 11 then return end
+    if not game:GetRoom():IsFirstVisit() then return end
+    local rng = AscensionMod.a11.dischargeRNG
+    for i = 0, game:GetNumPlayers() - 1 do
+        local p = game:GetPlayer(i)
+        if rng:RandomFloat() >= AscensionMod.a11.DISCHARGE_CHANGE then goto continue end
+        if AscensionMod.a11:TryDischarge(p, ActiveSlot.SLOT_PRIMARY) then
+            AscensionMod.a11:SpawnCurrent(p)
+            goto continue
+        end
+        if AscensionMod.a11:TryDischarge(p, ActiveSlot.SLOT_SECONDARY) then
+            AscensionMod.a11:SpawnCurrent(p)
+            goto continue
+        end
+        if AscensionMod.a11:TryDischarge(p, ActiveSlot.SLOT_POCKET) then
+            AscensionMod.a11:SpawnCurrent(p)
+            goto continue
+        end
+        ::continue::
+    end
+end
+AscensionMod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, AscensionMod.a11.Zap)
+
+---@param player EntityPlayer
+---@param activeSlot ActiveSlot
+function AscensionMod.a11:TryDischarge(player, activeSlot)
+    local activeItem = player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)
+    if not activeItem then return false end
+    local itemConfig = Isaac.GetItemConfig():GetCollectible(activeItem)
+    if not itemConfig then return false end
+    if itemConfig.ChargeType ~= 0 then
+        -- charge type 0 is normal (1 is timed, 2 is special)
+        return false
+    end
+    local charge = player:GetActiveCharge(activeSlot)
+    local batteryCharge = player:GetBatteryCharge(activeSlot)
+    if batteryCharge > 0 then
+        player:SetActiveCharge(charge + batteryCharge - 1, activeSlot)
+        return true
+    end
+    if charge > 0 then
+        player:SetActiveCharge(charge + batteryCharge -1, activeSlot)
+        return true
+    end
+    if player:GetSoulCharge() > 0 then
+        player:AddSoulHearts(-1)
+        return true
+    end
+    if player:GetBloodCharge() > 0 then
+        player:AddHearts(-1)
+        return true
+    end
+    return false
+end
+
+---@param player EntityPlayer
+function AscensionMod.a11:SpawnCurrent(player)
+    scheduler:once(function ()
+        local laserCnt = AscensionMod.a11.LASER_COUNT
+        scheduler:seq_n(function ()
+            local angle = math.random() * (math.pi * 2)
+            local dir = Vector(math.sin(angle), math.cos(angle))
+            local offset = dir * (math.random() * 15 + 5) -- 5 ~ 20
+            angle = angle + math.random() * (math.pi / 8) - (math.pi / 16) -- +-15 degrees
+            dir = Vector(math.sin(angle), math.cos(angle))
+            local length = math.random() * 30 + 90 -- 90 ~ 120
+
+            ---@class EntityLaser
+            local laser = player:FireTechLaser(
+                player.Position + offset,
+                LaserOffset.LASER_TECH1_OFFSET,
+                dir,
+                false, false, player, AscensionMod.a11.LASER_DMG_MUL)
+            if laser then
+                local col = Color.Default
+                col:SetColorize(7, 4.9, 3.8, 1)
+                col:SetTint(1, 1, 1, 1)
+                col:SetOffset(0.1, 0.1, 0.1)
+                laser:SetOneHit(true)
+                laser:SetColor(col, 10, 1, false, false)
+                laser:SetTimeout(5)
+                laser:SetMaxDistance(length)
+                laser:SetHomingType(AscensionMod.a11.LASER_HOMING)
+            end
+        end, 5, laserCnt, true)
+    end, 30)
+end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
